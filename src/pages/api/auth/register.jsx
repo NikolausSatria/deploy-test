@@ -17,10 +17,13 @@ export default async function register(req, res) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Simpan pengguna baru ke database
+    // Dapatkan tanggal hari ini dalam format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+
+    // Simpan pengguna baru ke database dengan tanggal hari ini
     const results = await query({
-      query: 'INSERT INTO employees (id, name, password) VALUES (?, ?, ?)',
-      values: [userId, name, hashedPassword],
+      query: 'INSERT INTO employees (id, name, password, createdAt) VALUES (?, ?, ?, ?)',
+      values: [userId, name, hashedPassword, today],
     });
 
     // Kirim respons sukses
