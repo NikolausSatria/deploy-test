@@ -1,4 +1,4 @@
-import NextAuth from "next-auth/next";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { query } from "@/libs/db";
 import bcrypt from "bcryptjs";
@@ -15,7 +15,7 @@ export default NextAuth({
         const { userId, password } = credentials;
 
         if (!userId || !password) {
-          throw new Error("Username and Password are Required");
+          throw new Error("User ID and Password are Required");
         }
 
         try {
@@ -24,32 +24,32 @@ export default NextAuth({
             values: [userId],
           });
 
-          if (users.length === 0){
+          if (users.length === 0) {
             throw new Error("No User Found");
           }
 
           const user = users[0];
           const match = await bcrypt.compare(password, user.password);
 
-          if (!match){
-            throw new Error("Password incorrect")
+          if (!match) {
+            throw new Error("Password incorrect");
           }
 
-          return { id: user.id, name: user.name, position: user.position }
+          return { id: user.id, name: user.name, position: user.position };
 
         } catch (error) {
-            console.log(error)
-            throw new Error("Error when trying to Login")
+          console.error("Login error:", error);
+          throw new Error("Error when trying to Login");
         }
       },
     }),
   ],
-  pages:{
+  pages: {
     signIn: '/login',
     error: '/login',
   },
   secret: process.env.SECRET,
-  session:{
+  session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60,
     updateAge: 2 * 60 * 60,

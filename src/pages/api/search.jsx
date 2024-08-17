@@ -5,7 +5,6 @@ export default async function handler(req, res) {
         const { search_query } = req.query;
         const searchValue = `%${search_query}%`;
         const search_data = await query({
-            // query: "SELECT product_id as id, product_description as description, 'product' as type FROM product_db UNION ALL SELECT material_id, material_description, 'material' as type FROM material_db UNION ALL SELECT material_id, material_description, 'asset' as type FROM asset_db",
             query:`
             SELECT product_id as id, product_description as description, 'product' as type FROM product_db WHERE product_description LIKE ? OR product_id LIKE ?
             UNION ALL 
