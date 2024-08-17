@@ -6,7 +6,14 @@ export default async function handler(req, res) {
     
     if (method === "GET") {
       const { search, page = 1, limit = 25 } = reqQuery;
-      const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+
+      if (isNaN(pageNum) || isNaN(limitNum)) {
+        return res.status(400).json({ error: "Invalid page or limit" });
+      }
+
+      const offset = (pageNum - 1) * limitNum;
       const values = [];
       let sqlQuery = `
         SELECT product_id, product_description, neck_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom FROM product_db
@@ -21,8 +28,7 @@ export default async function handler(req, res) {
         values.push(search, search);
       }
 
-      sqlQuery += ` ORDER BY product_id LIMIT ? OFFSET ?`;
-      values.push(parseInt(limit, 10), offset);
+      sqlQuery += ` ORDER BY product_id LIMIT ${limitNum} OFFSET ${offset}`; // Inline limit and offset
 
       console.log("SQL Query:", sqlQuery);
       console.log("Values:", values);
@@ -39,7 +45,7 @@ export default async function handler(req, res) {
         });
 
         const totalItems = totalCountResult[0].total_count;
-        const totalPages = Math.ceil(totalItems / parseInt(limit, 10));
+        const totalPages = Math.ceil(totalItems / limitNum);
 
         return res.status(200).json({ sku_product, totalPages });
       } catch (error) {
