@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const employees = await query({
-      query: 'SELECT * position FROM employees',
+      query: 'SELECT * FROM employees',
     });
 
     return res.status(200).json({ employees });
