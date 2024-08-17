@@ -1,12 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import HakedoLogo from "../images/Hakedologo.png";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { signIn, useSession } from "next-auth/react";
 
-export default function Home() {
+export default function Register() {
   const router = useRouter();
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
@@ -14,7 +13,7 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!userId || !password) {
+    if (!userId || !name || !password) {
       toast.error("Please input the form correctly");
       return;
     }
@@ -32,15 +31,17 @@ export default function Home() {
         }),
       });
 
-      console.log(res);
-      if (res?.ok) {
-        toast.success("User Register Successfully");
-        router.push("/")
+      if (!res.ok) {
+        const errorData = await res.json(); // Mendapatkan pesan kesalahan dari respons
+        console.error("Register failed:", errorData);
+        toast.error(`User register failed: ${errorData.message}`);
       } else {
-        toast.error("User register failed");
+        toast.success("User Register Successfully");
+        router.push("/");
       }
     } catch (error) {
-      console.log("error during registration: ", error);
+      console.log("Error during registration:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -65,10 +66,10 @@ export default function Home() {
                   <div className="relative">
                     <input
                       autoComplete="off"
-                      id="User ID"
-                      name="User ID"
+                      id="userId"
+                      name="userId"
                       type="text"
-                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="User ID"
                       onChange={(e) => setUserId(e.target.value)}
                     />
@@ -80,10 +81,10 @@ export default function Home() {
                   <div className="relative">
                     <input
                       autoComplete="off"
-                      id="User ID"
-                      name="User ID"
+                      id="name"
+                      name="name"
                       type="text"
-                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="Name"
                       onChange={(e) => setName(e.target.value)}
                     />
@@ -96,9 +97,9 @@ export default function Home() {
                     <input
                       autoComplete="off"
                       id="password"
-                      name="Password"
+                      name="password"
                       type="password"
-                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="Password"
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -106,16 +107,13 @@ export default function Home() {
                       Password
                     </label>
                   </div>
-                  <div className="relative">
-                    {/*<a href="/dashboard">*/}
-                    <br />
-                    <button
-                      id="submitButton"
-                      className="bg-blue-500 text-white rounded-md px-2 py-1 w-[300px] h-[50px]"
-                    >
-                      Register
-                    </button>
-                  </div>
+                  <br />
+                  <button
+                    id="submitButton"
+                    className="bg-blue-500 text-white rounded-md px-2 py-1 w-[300px] h-[50px]"
+                  >
+                    Register
+                  </button>
                 </form>
               </div>
             </div>
