@@ -39,8 +39,10 @@ export default function Login() {
       <div className="flex items-center justify-center">
         <Image
           src={HakedoLogo}
-          className="pl-5 m-10 left-[350px] top-[170px]"
+          className="pl-5 m-10"
           alt="company logo"
+          width={200} // Atur lebar sesuai kebutuhan
+          height={100} // Atur tinggi sesuai kebutuhan
         />
       </div>
       <div className="relative py-4 sm:max-w-xl sm:mx-auto flex space-x-4 justify-between">
@@ -83,6 +85,7 @@ export default function Login() {
                   </div>
                   <br />
                   <button
+                    type="submit" // Tambahkan type="submit" untuk tombol
                     id="submitButton"
                     className="bg-blue-500 text-white rounded-md px-2 py-1 w-[300px] h-[50px]"
                   >
