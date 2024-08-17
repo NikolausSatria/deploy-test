@@ -2,19 +2,19 @@ import { query } from "@/libs/db";
 
 export default async function handler(req, res) {
   try {
-    if (req.method === "GET") {
-      const { search, page = 1, limit = 25 } = req.query;
-      const offset = (page - 1) * parseInt(limit);
+    const { method, query: reqQuery, body } = req;
+    
+    if (method === "GET") {
+      const { search, page = 1, limit = 25 } = reqQuery;
+      const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+      const values = [];
       let sqlQuery = `
         SELECT product_id, product_description, neck_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom 
         FROM product_db
       `;
-
       let countQuery = `
         SELECT COUNT(*) AS total_count FROM product_db
       `;
-
-      let values = [];
 
       if (search) {
         sqlQuery += ` WHERE product_description LIKE CONCAT('%', ?, '%') OR product_id LIKE CONCAT('%', ?, '%')`;
@@ -23,21 +23,21 @@ export default async function handler(req, res) {
       }
 
       sqlQuery += ` ORDER BY product_id LIMIT ? OFFSET ?`;
-      values.push(parseInt(limit), parseInt(offset));
+      values.push(parseInt(limit, 10), offset);
 
       try {
         const totalCountResult = await query({
           query: countQuery,
-          values: search ? [search, search] : []
+          values: search ? [search, search] : [],
         });
 
         const sku_product = await query({
           query: sqlQuery,
-          values: values,
+          values,
         });
 
         const totalItems = totalCountResult[0].total_count;
-        const totalPages = Math.ceil(totalItems / limit);
+        const totalPages = Math.ceil(totalItems / parseInt(limit, 10));
 
         return res.status(200).json({ sku_product, totalPages });
       } catch (error) {
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       }
     }
 
-    if (req.method === "POST") {
+    if (method === "POST") {
       const {
         product_id,
         product_description,
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         bottles_per_coli,
         coli_per_box,
         uom,
-      } = req.body;
+      } = body;
 
       const processedValues = [
         product_id,
@@ -79,14 +79,14 @@ export default async function handler(req, res) {
           values: processedValues,
         });
 
-        return res.status(201).json({ message: "Product added successfully", data: req.body });
+        return res.status(201).json({ message: "Product added successfully", data: body });
       } catch (error) {
         console.error("Error adding product:", error);
         return res.status(500).json({ error: "Internal Server Error" });
       }
     }
 
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).end(`Method ${method} Not Allowed`);
   } catch (error) {
     console.error("Error in handler:", error);
     return res.status(500).json({ error: "Internal Server Error" });

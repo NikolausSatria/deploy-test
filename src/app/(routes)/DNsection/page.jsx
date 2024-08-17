@@ -13,8 +13,6 @@ import Swal from "sweetalert2";
 import { useSession } from "next-auth/react";
 
 function DnSectionPage() {
-  // const [formList, setFormList] = useState([{ product_id: 0, qty: null }]);
-  // const [selectedProduct, setSelectedProduct] = useState(null)
   const router = useRouter();
   const { data: session } = useSession();
   const employee_id = session?.user?.id;
@@ -35,9 +33,9 @@ function DnSectionPage() {
     pic: "",
   });
 
-  console.log(encodeURIComponent(state.dn))
-  console.log(encodeURIComponent(state.so))
-  console.log(encodeURIComponent(state.date_at))
+  console.log(encodeURIComponent(state.dn));
+  console.log(encodeURIComponent(state.so));
+  console.log(encodeURIComponent(state.date_at));
   useEffect(() => {
     if (employee_id) {
       setState((prevState) => ({
@@ -50,27 +48,24 @@ function DnSectionPage() {
   // search inventory
   const animatedComponent = makeAnimated();
 
-  const loadOption = (inputValue) => {
-    const apiUrl = `${
-      process.env.NEXT_PUBLIC_URL
-    }/api/search?search_query=${encodeURIComponent(inputValue)}`;
-    return fetch(apiUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((json) =>
-        json.searchs.map((item) => ({
-          label: `${item.id} | ${item.description}`,
-          value: item.id,
-        }))
-      )
-      .catch((error) => {
-        console.error("There has been a problem with fetch operation:", error);
-      });
+  const loadOption = async (inputValue) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_URL}/api/search?search_query=${encodeURIComponent(inputValue)}`
+      );
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const json = await response.json();
+      return json.searchs.map((item) => ({
+        label: `${item.id} | ${item.description}`,
+        value: item.id,
+      }));
+    } catch (error) {
+      console.error('There has been a problem with fetch operation:', error);
+    }
   };
+  
 
   const addNewProduct = () => {
     setState((prevState) => ({
@@ -93,14 +88,15 @@ function DnSectionPage() {
     const newFormList = [...state.formList];
     newFormList[index] = {
       ...newFormList[index],
-      product_id: selectedOption.value, // Simpan nilai id produk
-      productName: selectedOption.label, // Simpan label produk untuk menampilkan kembali
+      product_id: selectedOption ? selectedOption.value : 0, // Simpan nilai id produk
+      productName: selectedOption ? selectedOption.label : '', // Simpan label produk
     };
     setState((prevState) => ({
       ...prevState,
       formList: newFormList,
     }));
   };
+  
 
   const handleQuantityChange = (e, index) => {
     const updatedFormList = state.formList.map((item, i) =>
@@ -211,18 +207,6 @@ function DnSectionPage() {
                 >
                   Product Name
                 </label>
-                {/* <input
-                  type="text"
-                  id={`productName_${index}`}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="Enter Product Name"
-                  value={form.product_id}
-                  onChange={(e) => handleInputChange(e, index, "product_id")}
-                  required
-                /> */}
-
-                {/* select searchbar Section */}
-
                 <AsyncSelect
                   cacheOptions
                   loadOptions={loadOption}
@@ -300,29 +284,27 @@ function DnSectionPage() {
         </div>
 
         <div className="px-3 flex space-x-5">
-                {/* Dare Section */}
+          {/* Dare Section */}
 
-            <div className="mb-5 w-1/2">
-              <label
-                htmlFor="datecontainer"
-                className=" mb-2 block text-base font-medium text-[#545353]"
-              >
-                Date
-              </label>
-              <input
-                type="date"
-                name="date"
-                id="datecontainer"
-                className="w-full block rounded-md border  border-gray-300 bg-white py-1 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                value={state.date_at}
-                onChange={(e) =>
-                  setState({ ...state, date_at: e.target.value })
-                }
-              />
-            </div>
+          <div className="mb-5 w-1/2">
+            <label
+              htmlFor="datecontainer"
+              className=" mb-2 block text-base font-medium text-[#545353]"
+            >
+              Date
+            </label>
+            <input
+              type="date"
+              name="date"
+              id="datecontainer"
+              className="w-full block rounded-md border  border-gray-300 bg-white py-1 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
+              value={state.date_at}
+              onChange={(e) => setState({ ...state, date_at: e.target.value })}
+            />
+          </div>
 
-             {/* Delivery Number container*/}
-             <div className="mb-5 w-1/2">
+          {/* Delivery Number container*/}
+          <div className="mb-5 w-1/2">
             <label
               htmlFor="deliverynumber"
               className="block mb-2 text-sm font-medium text-gray-900"
@@ -340,13 +322,11 @@ function DnSectionPage() {
             />
           </div>
         </div>
-        <div className="px-3 flex space-x-5">
-        
-        </div>
+        <div className="px-3 flex space-x-5"></div>
 
         <div className="px-3 flex space-x-5">
-               {/* License Plate No container*/}
-               <div className="mb-5 w-1/2">
+          {/* License Plate No container*/}
+          <div className="mb-5 w-1/2">
             <label
               htmlFor="deliveryNote"
               className="block mb-2 text-sm font-medium text-gray-900"
@@ -366,8 +346,8 @@ function DnSectionPage() {
             />
           </div>
 
-            {/* PO Number*/}
-            <div className="mb-5 w-1/2">
+          {/* PO Number*/}
+          <div className="mb-5 w-1/2">
             <label
               htmlFor="POnumber"
               className="block mb-2 text-sm font-medium text-gray-900"
@@ -384,12 +364,11 @@ function DnSectionPage() {
               onChange={(e) => setState({ ...state, po: e.target.value })}
             />
           </div>
- 
         </div>
 
         <div className="px-3 flex space-x-5">
-           {/* Customer ID Container*/}
-           <div className="mb-5 w-1/2">
+          {/* Customer ID Container*/}
+          <div className="mb-5 w-1/2">
             <label
               htmlFor="deliverynumber"
               className="block mb-2 text-sm font-medium text-gray-900"
@@ -432,32 +411,32 @@ function DnSectionPage() {
 
         <div className="px-3 flex space-x-5">
           <div className="mb-5 w-full">
-              <label
-                htmlFor="deliverynumber"
-                className="block mb-2 text-sm font-medium text-gray-900"
-              >
-                Company Address
-              </label>
-              <input
-                type="text"
-                id="customerID"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Enter Company Address"
-                required
-                value={state.address}
-                onChange={(e) => setState({ ...state, address: e.target.value })}
-              />
-            </div>
+            <label
+              htmlFor="deliverynumber"
+              className="block mb-2 text-sm font-medium text-gray-900"
+            >
+              Company Address
+            </label>
+            <input
+              type="text"
+              id="customerID"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="Enter Company Address"
+              required
+              value={state.address}
+              onChange={(e) => setState({ ...state, address: e.target.value })}
+            />
+          </div>
         </div>
 
         <div className="px-3 flex space-x-5">
-            {/* Phone Number Container */}
-            <div className="mb-5 w-1/2">
+          {/* Phone Number Container */}
+          <div className="mb-5 w-1/2">
             <label
               htmlFor="Contactnumber"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
-              Phone Number 
+              Phone Number
             </label>
             <input
               type="number"
@@ -470,7 +449,7 @@ function DnSectionPage() {
                 setState({ ...state, phone_number: e.target.value })
               }
             />
-            </div>
+          </div>
           {/* On behalf of container*/}
           <div className=" block mb-5 w-1/2">
             <label
@@ -488,9 +467,7 @@ function DnSectionPage() {
               onChange={(e) => setState({ ...state, pic: e.target.value })}
               required
             />
-
-          </div> 
-
+          </div>
         </div>
 
         {/* Submit button */}
