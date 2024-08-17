@@ -2,17 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BsDownload } from "react-icons/bs";
-import Link from "next/link";
-import Popup from "../Popup";
-import RouteLayout from "../../RouteLayout";
+import Popup from "./Popup";
+import RouteLayout from "../RouteLayout";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-function ProductInventoryTransaction({ item }) {
+function InventoryTransaction({ item }) {
   const router = useRouter();
 
   const [buttonPopup, setbuttonPopup] = useState(false);
-  const [product_inventory, setProduct_inventory] = useState([]);
+  const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -20,34 +19,28 @@ function ProductInventoryTransaction({ item }) {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
+  useEffect(() => {
+    if (searchQuery.length === 0 || searchQuery.length > 2) {
+      getInventory(searchQuery, currentPage);
+    }
+  }, [searchQuery, currentPage]);
+
   async function getInventory(query, page) {
     setIsLoading(true);
-
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/productInventory?search=${query}&page=${page}&limit=${itemsPerPage}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/inventory?search=${query}&page=${page}&limit=${itemsPerPage}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
       const response = await res.json();
-      if (res.ok) {
-        setProduct_inventory(response.product_inventory || []);
-        setTotalPages(response.totalPages || 0);
-      } else {
-        console.error("Failed to load Product Inventory Transaction:", response.message);
-      }
+      setInventory(response.inventory);
+      setTotalPages(response.totalPages);
     } catch (error) {
-      console.error("Failed to load Product Inventory Transaction:", error);
-    } finally {
+      console.error("Failed to load dbSku:", error);
+    } finally{
       setIsLoading(false);
     }
   }
-
-  useEffect(() => {
-    getInventory(searchQuery, currentPage);
-  }, [searchQuery, currentPage]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -55,25 +48,28 @@ function ProductInventoryTransaction({ item }) {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setCurrentPage(1); // Reset to first page on new search
-    getInventory(searchQuery, 1);
+    getInventory(searchQuery);
+  };
+
+  const handleDetails = (item) => {
+    router.push(`/inventoryTransaction/details/page?id=${item}`);
   };
 
   async function downloadCompleteInventory() {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/productInventory?allData=true`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/inventory?allData=true`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      if (res.ok) {
-        createPdf(data.product_inventory || []);
+      if (res.status === 200) {
+        createPdf(data.inventory);
       } else {
-        console.error("Failed to download product inventory data:", data.message);
+        console.error("Failed to download complete inventory data:", data.message);
       }
     } catch (error) {
-      console.error("Failed to fetch product inventory data:", error);
+      console.error("Failed to fetch complete inventory data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -90,14 +86,14 @@ function ProductInventoryTransaction({ item }) {
       item.qty.toString(),
     ]);
   
-    doc.text("Product Transaction Report", 14, 15);
+    doc.text("Inventory Transaction Report", 14, 15);
     autoTable(doc, { startY: 20, head: [tableColumns], body: tableRows });
-    doc.save('product_transaction_report.pdf');
+    doc.save('inventory_transaction_report.pdf');
   }
 
   return (
     <RouteLayout>
-      <div className="flex w=[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+      <div className="flex w-full h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         <h1 className="font-medium text-4xl">INVENTORY TRANSACTION</h1>
         {/* Search Bar container */}
         <form className="p-7" onSubmit={handleSearch}>
@@ -131,7 +127,7 @@ function ProductInventoryTransaction({ item }) {
               className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-700 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
               placeholder="Search Inventory by Name"
               value={searchQuery}
-              onChange={handleSearchChange}
+          onChange={handleSearchChange}
               required
             ></input>
             <button
@@ -143,35 +139,34 @@ function ProductInventoryTransaction({ item }) {
           </div>
         </form>
 
-        {/* Categories Menubar */}
+        {/*Categories Menubar */}
         <div className="flex flex-row-reverse">
           <nav className="relative z-0 inline-flex shadow-sm ">
             <div className="flex justify-center items-center">
-              <Link
+              <a
                 href="/inventoryTransaction/Product_Inventory"
-                className="-ml-px relative inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-blue-700 text-sm leading-5 font-medium text-white focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-tertiary transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white active:text-white"
+                className="-ml-px relative inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm leading-5 font-medium text-blue-700 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-tertiary active:text-gray-700 transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
               >
                 Product
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/inventoryTransaction/Asset_Inventory"
                 className="-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm leading-5 font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-tertiary active:text-gray-700 transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
               >
                 Asset
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/inventoryTransaction/Material_Inventory"
                 className="-ml-px relative inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm leading-5 font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-tertiary active:text-gray-700 transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
               >
                 Material
-              </Link>
+              </a>
             </div>
           </nav>
         </div>
 
-        {/* Popup download menu */}
+        {/* the pop Up download menu */}
         <Popup trigger={buttonPopup} setTrigger={setbuttonPopup}></Popup>
-        
         {/* Main Page Container */}
         <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
           <table className="min-w-full">
@@ -186,81 +181,134 @@ function ProductInventoryTransaction({ item }) {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Action
-                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
+                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
               </tr>
             </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-4">
-                    Loading...
-                  </td>
-                </tr>
-              ) : (
-                product_inventory.map((item, index) => (
-                  <tr key={index}>
+
+            <tbody className="bg-white">
+              {/* Number */}
+              { isLoading ? (
+                  <p>Loading...</p>
+                ) : 
+                (inventory.map((item, index) => {
+                return (
+                  <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      {index + 1}
+                      <div className="flex  justify-center items-center">
+                        <div>
+                          <div className="text-sm leading-5 text-gray-800">
+                            {(currentPage - 1) * itemsPerPage + index + 1}
+                          </div>
+                        </div>
+                      </div>
                     </td>
+                    {/*ID */}
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      {item.id}
+                      <div className="flex items-center">
+                        <div>
+                          <div className="text-sm leading-5 text-gray-800">
+                            #{item.id}
+                          </div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      {item.description}
-                    </td>
+                    {/* Description */}
                     <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      {item.type}
+                      <div className="text-sm leading-5 text-blue-900">
+                        {item.description}
+                      </div>
                     </td>
+                    {/* Type */}
                     <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      {item.qty}
+                      <div className="text-sm leading-5 text-blue-900">
+                        {item.type}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                    {/* Quantity */}
+                    <td className="px-7 py-4  whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
+                      <span className="text-xs flex justify-center">
+                        {item.qty}
+                      </span>
+                    </td>
+
+                    {/**Detail Button Section */}
+                    <td className="px-7 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-sm leading-5">
                       <button
-                        className="text-white px-3 py-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                        onClick={() => {
-                          setbuttonPopup(true);
-                        }}
+                        className="px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
+                        onClick={() => handleDetails(item.id)}
                       >
-                        Show
+                        View Details
                       </button>
                     </td>
+                    <th className="px-6 py-3 border-b-2 border-gray-300"></th>
                   </tr>
-                ))
-              )}
+                );
+              }))}
             </tbody>
           </table>
-          <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md"
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md"
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </button>
-            <button
-              onClick={downloadCompleteInventory}
-              className="text-white px-3 py-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
-              <BsDownload /> Download
-            </button>
+          {/* Footer Information */}
+          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
+
+                    <div>
+                      <nav className="relative z-0 inline-flex shadow-sm pb-5 pt-5 ">
+                          <div className="flex justify-center items-center">
+                            {currentPage > 1 && (
+                              <button
+                                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
+                                onClick={() => setCurrentPage((current) => current - 1)}
+                              >
+                                Previous
+                              </button>
+                            )}
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                              (page) => (
+                                <button
+                                  className={`-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 transition ease-in-out duration-150 ${
+                                    page === currentPage
+                                      ? "bg-blue-500 text-white" // Ini menandai halaman saat ini
+                                      : "bg-white text-blue-700 hover:bg-blue-50"
+                                  }`}
+                                  key={page}
+                                  onClick={() => setCurrentPage(page)}
+                                >
+                                  {page}
+                                </button>
+                              )
+                            )}
+
+                            {currentPage < totalPages && (
+                              <button
+                                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
+                                onClick={() => setCurrentPage((current) => current + 1)}
+                              >
+                                Next
+                              </button>
+                            )}
+
+                          </div>   
+                        </nav>
+                    </div>
+                    
+                    {/* Download button section */}
+                    <div className="flex place-items-end">
+                          <button
+                          onClick={downloadCompleteInventory} 
+                          disabled={isLoading}
+                          type="button"
+                          className="text-white bg-blue-700 h-[58px] w-[355px] flex items-center justify-around  hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                        >
+                          <BsDownload size={"25px"} />
+                          {isLoading ? 'Downloading...' : 'Download Document in PDF'}
+                        </button>
+                     </div>
           </div>
         </div>
       </div>
@@ -268,4 +316,4 @@ function ProductInventoryTransaction({ item }) {
   );
 }
 
-export default ProductInventoryTransaction;
+export default InventoryTransaction;
