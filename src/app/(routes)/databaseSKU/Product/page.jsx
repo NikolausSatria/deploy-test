@@ -26,8 +26,9 @@ function DatabaseSku() {
         }
       );
       const response = await res.json();
-      setSkuProduct(response.sku_product);
-      setTotalPages(response.totalPages);
+      console.log('API Response:', response); // Tambahkan log ini
+      setSkuProduct(Array.isArray(response.sku_product) ? response.sku_product : []);
+      setTotalPages(response.totalPages || 0);
     } catch (error) {
       console.error("Failed to load db Product:", error);
     } finally {
@@ -163,44 +164,53 @@ function DatabaseSku() {
                   </td>
                 </tr>
               ) : (
-                skuProduct.map((item, index) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{index + 1 + (currentPage - 1) * itemsPerPage}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.id}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.product_description}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.neck_type}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.material}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.volume_ml}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.weight_g}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.color}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.bottles_per_box}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.box_per_coli}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.qty_per_coli}</td>
+                Array.isArray(skuProduct) && skuProduct.length > 0 ? (
+                  skuProduct.map((item, index) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{index + 1 + (currentPage - 1) * itemsPerPage}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.id}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.product_description}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.neck_type}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.material}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.volume_ml}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.weight_g}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.color}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.bottles_per_box}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.box_per_coli}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">{item.qty_per_coli}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="11" className="text-center py-4">
+                      No data available
+                    </td>
                   </tr>
-                ))
+                )
               )}
             </tbody>
           </table>
-          {/* Pagination */}
-          <div className="flex justify-center items-center mt-4">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prevPage) => prevPage - 1)}
-              className="px-4 py-2 border border-gray-300 rounded-l-md bg-white text-blue-600 hover:bg-gray-100"
-            >
-              Previous
-            </button>
-            <span className="px-4 py-2 border-t border-b border-gray-300">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prevPage) => prevPage + 1)}
-              className="px-4 py-2 border border-gray-300 rounded-r-md bg-white text-blue-600 hover:bg-gray-100"
-            >
-              Next
-            </button>
-          </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={() => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </RouteLayout>

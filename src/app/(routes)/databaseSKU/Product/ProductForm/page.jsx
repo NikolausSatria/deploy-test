@@ -31,7 +31,7 @@ export default function Page() {
     e.preventDefault();
     Swal.fire({
       title: "Are you sure?",
-      text: "input data to database",
+      text: "Input data to database",
       confirmButtonText: "Yes",
       showCancelButton: true,
       cancelButtonText: "Close",
@@ -40,8 +40,10 @@ export default function Page() {
         setIsLoading(true);
         await AddSku();
         setIsLoading(false);
-        toast.success("Input Successfully");
-        router.push('/databaseSKU/Product');
+        if (created) {
+          toast.success("Input Successfully");
+          router.push('/databaseSKU/Product');
+        }
       }
     });
   };
@@ -147,7 +149,7 @@ export default function Page() {
           </label>
           <input
             type="text"
-            id="ProductDesc"
+            id="productDesc"
             name="productDesc"
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             placeholder="Product Description"
@@ -162,14 +164,14 @@ export default function Page() {
           {/* Product Name */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="productNumber"
+              htmlFor="productName"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
               Product Name
             </label>
             <input
               type="text"
-              id="productNumber"
+              id="productName"
               name="productName"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Product Name"
@@ -356,14 +358,16 @@ export default function Page() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className={`text-white h-[50px] mt-5 ${isLoading ? 'bg-gray-400' : 'bg-blue-700 hover:bg-blue-600'} outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full`}
-          onClick={handleSubmit}
-          disabled={isLoading}
-        >
-          {isLoading ? "Submitting..." : "Submit"}
-        </button>
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-700"
+          >
+            {isLoading ? "Loading..." : "Submit"}
+          </button>
+        </div>
       </div>
     </RouteLayout>
   );
