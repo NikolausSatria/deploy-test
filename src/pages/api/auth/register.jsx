@@ -20,10 +20,10 @@ export default async function register(req, res) {
     // Dapatkan tanggal hari ini dalam format YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
 
-    // Simpan pengguna baru ke database dengan tanggal hari ini
+    // Simpan pengguna baru ke database dengan tanggal hari ini dan posisi default 'user'
     const results = await query({
-      query: 'INSERT INTO employees (id, name, password, createdAt) VALUES (?, ?, ?, ?)',
-      values: [userId, name, hashedPassword, today],
+      query: 'INSERT INTO employees (id, name, password, createdAt, position) VALUES (?, ?, ?, ?, ?)',
+      values: [userId, name, hashedPassword, today, 'user'],
     });
 
     // Kirim respons sukses
