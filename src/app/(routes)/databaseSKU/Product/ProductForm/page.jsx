@@ -1,7 +1,7 @@
 "use client";
 import RouteLayout from "@/app/(routes)/RouteLayout";
 import Link from "next/link";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 
 export default function Page() {
   const [created, setCreated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [productName, setProductName] = useState("");
   const [state, setState] = useState({
@@ -25,6 +26,7 @@ export default function Page() {
   });
 
   const router = useRouter();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     Swal.fire({
@@ -33,15 +35,17 @@ export default function Page() {
       confirmButtonText: "Yes",
       showCancelButton: true,
       cancelButtonText: "Close",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        AddSku();
-        toast.success("Input Successfully")
-        router.push('/databaseSKU/Product')
-      } else {
+        setIsLoading(true);
+        await AddSku();
+        setIsLoading(false);
+        toast.success("Input Successfully");
+        router.push('/databaseSKU/Product');
       }
     });
   };
+
   async function AddSku() {
     const postData = {
       method: "POST",
@@ -70,10 +74,13 @@ export default function Page() {
       if (res.ok) {
         setCreated(true);
       } else {
-        console.error("Server responded with non-200 code:", response);
+        const errorData = await res.json();
+        console.error("Server error:", errorData);
+        toast.error("Failed to submit data. Please try again.");
       }
     } catch (error) {
       console.error("Network error:", error);
+      toast.error("Network error. Please try again later.");
     }
   }
 
@@ -130,7 +137,7 @@ export default function Page() {
           </h1>
         </div>
 
-        {/* Product Description*/}
+        {/* Product Description */}
         <div className="mb-5 w-full px-3">
           <label
             htmlFor="productDesc"
@@ -147,15 +154,12 @@ export default function Page() {
             autoComplete="false"
             value={state.productDesc}
             readOnly
-            // onChange={(e) =>
-            //   setState({ ...state, productDesc: e.target.value })
-            // }
-            // required
           />
         </div>
-        {/** form input container Product Description*/}
+
+        {/* Form input container */}
         <div className="px-3 flex space-x-5">
-          {/* product Name */}
+          {/* Product Name */}
           <div className="mb-5 w-1/2">
             <label
               htmlFor="productNumber"
@@ -174,210 +178,192 @@ export default function Page() {
               required
             />
           </div>
-          {/* Product ID*/}
+          {/* Product ID */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="productID"
+              htmlFor="productId"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
               Product ID
             </label>
             <input
-              type="number"
-              id="productID"
+              type="text"
+              id="productId"
               name="productId"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Product ID"
               value={state.productId}
-              // onChange={(e) =>
-              //   setState({ ...state, productId: e.target.value })
-              // }
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
         </div>
 
+        {/* Additional fields */}
         <div className="px-3 flex space-x-5">
           {/* Neck Type */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="neckTypeContainer"
+              htmlFor="neckType"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
               Neck Type
             </label>
             <input
               type="text"
-              id="neckTypeContainer"
+              id="neckType"
               name="neckType"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Neck Type"
               value={state.neckType}
-              // onChange={(e) => setState({ ...state, neckType: e.target.value })}
-              onChange={handleInputChange} 
-              required
+              onChange={handleInputChange}
             />
           </div>
-          {/* Volume ml.*/}
+          {/* Volume */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="volumeContainer"
+              htmlFor="volume"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
-              Volume (ml)
-            </label>
-            <input
-              type="number"
-              id="volumeContainer"
-              name="volume"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="Volume (ml)"
-              value={state.volume}
-              // onChange={(e) => setState({ ...state, volume: e.target.value })}
-              onChange={handleInputChange} 
-              required
-            />
-          </div>
-          {/* UOM.*/}
-          <div className="mb-5 w-1/2">
-            <label
-              htmlFor="volumeContainer"
-              className="block mb-2 text-sm font-medium text-gray-900"
-            >
-              UOM
+              Volume
             </label>
             <input
               type="text"
-              id="uomContainer"
-              name="uom"
+              id="volume"
+              name="volume"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="Uom"
-              value={state.uom}
-              // onChange={(e) => setState({ ...state, volume: e.target.value })}
-              onChange={handleInputChange} 
-              required
+              placeholder="Volume"
+              value={state.volume}
+              onChange={handleInputChange}
             />
           </div>
         </div>
+
         <div className="px-3 flex space-x-5">
           {/* Material */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="materialContainer"
+              htmlFor="material"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
               Material
             </label>
             <input
               type="text"
-              id="materialContainer"
+              id="material"
               name="material"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Material"
               value={state.material}
-              // onChange={(e) => setState({ ...state, material: e.target.value })}
-              onChange={handleInputChange} 
-              required
+              onChange={handleInputChange}
             />
           </div>
-          {/* Weight*/}
+          {/* Weight */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="weightContainer"
+              htmlFor="weight"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
-              Weight (gr)
+              Weight
             </label>
             <input
-              type="number"
-              id="weightContainer"
+              type="text"
+              id="weight"
               name="weight"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="Weight (gr)"
+              placeholder="Weight"
               value={state.weight}
-              // onChange={(e) => setState({ ...state, weight: e.target.value })}
-              onChange={handleInputChange} 
-              required
+              onChange={handleInputChange}
             />
           </div>
+        </div>
+
+        <div className="px-3 flex space-x-5">
           {/* Color */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="colorContainer"
+              htmlFor="color"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
               Color
             </label>
             <input
               type="text"
-              id="colorContainer"
+              id="color"
               name="color"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Color"
               value={state.color}
-              // onChange={(e) => setState({ ...state, color: e.target.value })}
-              onChange={handleInputChange} 
-              required
+              onChange={handleInputChange}
             />
           </div>
-        </div>
-        <div className="px-3 flex space-x-5">
-          {/* Bottles/coli */}
+          {/* Bottles Per Coli */}
           <div className="mb-5 w-1/2">
             <label
-              htmlFor="bottlesPerColi"
+              htmlFor="bottles_per_coli"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
-              #Bottles/Coli
+              Bottles Per Coli
             </label>
             <input
-              type="number"
-              id="bottlesPerColi"
+              type="text"
+              id="bottles_per_coli"
               name="bottles_per_coli"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="Bottles/Coli"
+              placeholder="Bottles Per Coli"
               value={state.bottles_per_coli}
-              // onChange={(e) =>
-              //   setState({ ...state, bottles_per_coli: e.target.value })
-              // }
-              onChange={handleInputChange} 
-            />
-          </div>
-          {/* #Box/Coli*/}
-          <div className="mb-5 w-1/2">
-            <label
-              htmlFor="boxPerColi"
-              className="block mb-2 text-sm font-medium text-gray-900"
-            >
-              #Box/Coli
-            </label>
-            <input
-              type="number"
-              id="boxPerColi"
-              name="coli_per_box"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="Box/Coli"
-              value={state.coli_per_box}
-              // onChange={(e) =>
-              //   setState({ ...state, coli_per_box: e.target.value })
-              // }
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
             />
           </div>
         </div>
 
-        {/* Three options for Data inventory */}
-        {/* Submit button */}
-        <Link href={"/Confirmpage"} passHref>
-          <button
-            type="button"
-            className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
-            onClick={handleSubmit}
-          >
-            Submit
-          </button>
-        </Link>
+        <div className="px-3 flex space-x-5">
+          {/* Coli Per Box */}
+          <div className="mb-5 w-1/2">
+            <label
+              htmlFor="coli_per_box"
+              className="block mb-2 text-sm font-medium text-gray-900"
+            >
+              Coli Per Box
+            </label>
+            <input
+              type="text"
+              id="coli_per_box"
+              name="coli_per_box"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="Coli Per Box"
+              value={state.coli_per_box}
+              onChange={handleInputChange}
+            />
+          </div>
+          {/* UOM */}
+          <div className="mb-5 w-1/2">
+            <label
+              htmlFor="uom"
+              className="block mb-2 text-sm font-medium text-gray-900"
+            >
+              UOM
+            </label>
+            <input
+              type="text"
+              id="uom"
+              name="uom"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="UOM"
+              value={state.uom}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className={`text-white h-[50px] mt-5 ${isLoading ? 'bg-gray-400' : 'bg-blue-700 hover:bg-blue-600'} outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full`}
+          onClick={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? "Submitting..." : "Submit"}
+        </button>
       </div>
     </RouteLayout>
   );
