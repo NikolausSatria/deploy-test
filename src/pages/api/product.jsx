@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
       const values = [];
       let sqlQuery = `
-        SELECT product_id, product_description, neck_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom 
+        SELECT product_id, product_description, nect_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom 
         FROM product_db
       `;
       let countQuery = `
@@ -75,7 +75,8 @@ export default async function handler(req, res) {
 
       try {
         await query({
-          query: "INSERT INTO product_db (product_id, product_description, neck_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          query: "INSERT INTO product_db (product_id, product_description, nect_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          // query: "INSERT INTO product_db (product_id, product_description, neck_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           values: processedValues,
         });
 
