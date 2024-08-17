@@ -7,7 +7,7 @@ import RouteLayout from "../RouteLayout";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-function InventoryTransaction({ item }) {
+function InventoryTransaction() {
   const router = useRouter();
 
   const [buttonPopup, setbuttonPopup] = useState(false);
@@ -36,8 +36,8 @@ function InventoryTransaction({ item }) {
       setInventory(response.inventory);
       setTotalPages(response.totalPages);
     } catch (error) {
-      console.error("Failed to load dbSku:", error);
-    } finally{
+      console.error("Failed to load inventory:", error);
+    } finally {
       setIsLoading(false);
     }
   }
@@ -48,7 +48,8 @@ function InventoryTransaction({ item }) {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    getInventory(searchQuery);
+    setCurrentPage(1); // Reset to first page on new search
+    getInventory(searchQuery, 1);
   };
 
   const handleDetails = (item) => {
@@ -127,9 +128,9 @@ function InventoryTransaction({ item }) {
               className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-700 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
               placeholder="Search Inventory by Name"
               value={searchQuery}
-          onChange={handleSearchChange}
+              onChange={handleSearchChange}
               required
-            ></input>
+            />
             <button
               type="submit"
               className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -193,122 +194,80 @@ function InventoryTransaction({ item }) {
             </thead>
 
             <tbody className="bg-white">
-              {/* Number */}
-              { isLoading ? (
-                  <p>Loading...</p>
-                ) : 
-                (inventory.map((item, index) => {
-                return (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-4 text-center">Loading...</td>
+                </tr>
+              ) : inventory.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-4 text-center">No results found</td>
+                </tr>
+              ) : (
+                inventory.map((item, index) => (
                   <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex  justify-center items-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
-                            {(currentPage - 1) * itemsPerPage + index + 1}
-                          </div>
-                        </div>
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
+                      {index + 1 + (currentPage - 1) * itemsPerPage}
                     </td>
-                    {/*ID */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
-                            #{item.id}
-                          </div>
-                        </div>
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
+                      {item.id}
                     </td>
-                    {/* Description */}
-                    <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
-                        {item.description}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
+                      {item.description}
                     </td>
-                    {/* Type */}
-                    <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
-                        {item.type}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
+                      {item.type}
                     </td>
-                    {/* Quantity */}
-                    <td className="px-7 py-4  whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
-                      <span className="text-xs flex justify-center">
-                        {item.qty}
-                      </span>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900 text-center">
+                      {item.qty}
                     </td>
-
-                    {/**Detail Button Section */}
-                    <td className="px-7 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-sm leading-5">
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
                       <button
-                        className="px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
                         onClick={() => handleDetails(item.id)}
+                        className="text-blue-500 hover:text-blue-700"
                       >
                         View Details
                       </button>
                     </td>
-                    <th className="px-6 py-3 border-b-2 border-gray-300"></th>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
+                      <button
+                        onClick={() => setbuttonPopup(true)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Edit
+                      </button>
+                    </td>
                   </tr>
-                );
-              }))}
+                ))
+              )}
             </tbody>
           </table>
-          {/* Footer Information */}
-          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
 
-                    <div>
-                      <nav className="relative z-0 inline-flex shadow-sm pb-5 pt-5 ">
-                          <div className="flex justify-center items-center">
-                            {currentPage > 1 && (
-                              <button
-                                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                                onClick={() => setCurrentPage((current) => current - 1)}
-                              >
-                                Previous
-                              </button>
-                            )}
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                              (page) => (
-                                <button
-                                  className={`-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 transition ease-in-out duration-150 ${
-                                    page === currentPage
-                                      ? "bg-blue-500 text-white" // Ini menandai halaman saat ini
-                                      : "bg-white text-blue-700 hover:bg-blue-50"
-                                  }`}
-                                  key={page}
-                                  onClick={() => setCurrentPage(page)}
-                                >
-                                  {page}
-                                </button>
-                              )
-                            )}
-
-                            {currentPage < totalPages && (
-                              <button
-                                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                                onClick={() => setCurrentPage((current) => current + 1)}
-                              >
-                                Next
-                              </button>
-                            )}
-
-                          </div>   
-                        </nav>
-                    </div>
-                    
-                    {/* Download button section */}
-                    <div className="flex place-items-end">
-                          <button
-                          onClick={downloadCompleteInventory} 
-                          disabled={isLoading}
-                          type="button"
-                          className="text-white bg-blue-700 h-[58px] w-[355px] flex items-center justify-around  hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                        >
-                          <BsDownload size={"25px"} />
-                          {isLoading ? 'Downloading...' : 'Download Document in PDF'}
-                        </button>
-                     </div>
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={downloadCompleteInventory}
+              className="text-blue-500 hover:text-blue-700"
+              disabled={isLoading}
+            >
+              <BsDownload className="inline-block mr-2" />
+              Download Complete Inventory
+            </button>
+            <div>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+              >
+                Previous
+              </button>
+              <span className="mx-4 text-sm font-medium">{`Page ${currentPage} of ${totalPages}`}</span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>

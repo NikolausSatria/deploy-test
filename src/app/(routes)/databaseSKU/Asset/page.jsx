@@ -31,7 +31,7 @@ function Page() {
       setSku(response.sku);
       setTotalPages(response.totalPages);
     } catch (error) {
-      console.error("Failed to load db Product:", error);
+      console.error("Failed to load db Asset:", error);
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +55,7 @@ function Page() {
   return (
     <RouteLayout>
       <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        {/*Header Button */}
+        {/* Header Button */}
         <div className="flex justify-between items-center">
           <Link href={"/databaseSKU"}>
             <button>
@@ -112,9 +112,9 @@ function Page() {
             </button>
           </div>
         </form>
-        {/*Categories Menubar */}
+        {/* Categories Menubar */}
         <div className="flex flex-row-reverse">
-          <nav className="relative z-0 inline-flex shadow-sm ">
+          <nav className="relative z-0 inline-flex shadow-sm">
             <div className="flex justify-center items-center">
               <Link
                 href="/databaseSKU/Product"
@@ -138,9 +138,9 @@ function Page() {
           </nav>
         </div>
 
-        <div className="justify-center items-center  max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
-            {/*Head table */}
+            {/* Head table */}
             <thead>
               <tr>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
@@ -161,16 +161,25 @@ function Page() {
               </tr>
             </thead>
             <tbody className="bg-white">
-            { isLoading ? (
-                  <p>Loading...</p>
-                ) : 
-                (sku.map((sku, index) => {
-                return (
-                  <tr>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-4">
+                    Loading...
+                  </td>
+                </tr>
+              ) : sku.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-4">
+                    No data available.
+                  </td>
+                </tr>
+              ) : (
+                sku.map((sku, index) => (
+                  <tr key={sku.material_id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
                       <div>
                         <div className="text-sm leading-5 text-gray-800">
-                        {(currentPage - 1) * itemsPerPage + index + 1}
+                          {(currentPage - 1) * itemsPerPage + index + 1}
                         </div>
                       </div>
                     </td>
@@ -183,84 +192,44 @@ function Page() {
                         </div>
                       </div>
                     </td>
-
-                    {/* asset number*/}
                     <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
                       <div className="text-sm leading-5 text-blue-900">
                         {sku.asset_number}
                       </div>
                     </td>
-                    {/* Material Type */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-sm leading-5 text-gray-600">
                       {sku.material_type}
                     </td>
-                    {/*Material tDescription */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5 text-center">
-                      <span className="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">
-                        <span className="relative text-xs">
-                          {sku.material_description}
-                        </span>
-                      </span>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-sm leading-5 text-gray-600">
+                      {sku.material_description}
                     </td>
-                    {/**Detail Button Section */}
                   </tr>
-                );
-              }))}
+                ))
+              )}
             </tbody>
           </table>
 
-          {/* Footer Information */}
-          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
-            {/* <div>
-              <p className="text-sm leading-5 gap-1 flex text-blue-700">
-                Showing
-                <span className="font-medium">1</span>
-                to
-                <span className="font-medium">200</span>
-                of
-                <span className="font-medium">2000</span>
-                results
-              </p>
-            </div> */}
-            <div>
-            <nav className="relative z-0 inline-flex shadow-sm pb-5 pt-5">
-                <div className="flex justify-center items-center">
-                  {currentPage > 1 && (
-                    <button
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                      onClick={() => setCurrentPage((current) => current - 1)}
-                    >
-                      Previous
-                    </button>
-                  )}
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        className={`-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 transition ease-in-out duration-150 ${
-                          page === currentPage
-                            ? "bg-blue-500 text-white" // Ini menandai halaman saat ini
-                            : "bg-white text-blue-700 hover:bg-blue-50"
-                        }`}
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
-
-                  {currentPage < totalPages && (
-                    <button
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                      onClick={() => setCurrentPage((current) => current + 1)}
-                    >
-                      Next
-                    </button>
-                  )}
-                </div>
-              </nav>
-            </div>
+          {/* Pagination */}
+          <div className="flex items-center justify-center mt-4">
+            <nav className="relative z-0 inline-flex shadow-sm">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                Previous
+              </button>
+              <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                Next
+              </button>
+            </nav>
           </div>
         </div>
       </div>

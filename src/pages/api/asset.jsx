@@ -4,8 +4,15 @@ export default async function handler(req, res) {
   try {
     if (req.method === "GET") {
       const { search, page = 1, limit = 25 } = req.query;
-      const offset = (page - 1) * parseInt(limit);
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
 
+      if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+        return res.status(400).json({ error: "Invalid page or limit" });
+      }
+
+      const offset = (pageNum - 1) * limitNum;
+      const values = [];
       let sqlQuery = `
         SELECT material_id, asset_number, material_type, material_description 
         FROM asset_db
@@ -15,7 +22,6 @@ export default async function handler(req, res) {
         SELECT COUNT(*) AS total_count 
         FROM asset_db
       `;
-      let values = [];
 
       if (search) {
         sqlQuery += ` WHERE material_description LIKE CONCAT('%', ?, '%') 
@@ -25,26 +31,29 @@ export default async function handler(req, res) {
         values.push(search, search);
       }
 
-      sqlQuery += ` ORDER BY material_id LIMIT ? OFFSET ?`;
-      values.push(parseInt(limit), parseInt(offset));
+      sqlQuery += ` ORDER BY material_id LIMIT ${limitNum} OFFSET ${offset}`;
+
+      console.log("SQL Query:", sqlQuery);
+      console.log("Values:", values);
 
       try {
         const totalCountResult = await query({
           query: countQuery,
-          values: values.length > 0 ? values : [],
+          values: search ? [search, search] : [],
         });
+
         const assets = await query({
           query: sqlQuery,
-          values: values,
+          values,
         });
 
         const totalItems = totalCountResult[0].total_count;
-        const totalPages = Math.ceil(totalItems / limit);
+        const totalPages = Math.ceil(totalItems / limitNum);
 
-        res.status(200).json({ assets: assets, totalPages: totalPages });
+        return res.status(200).json({ assets, totalPages });
       } catch (error) {
         console.error("Error fetching assets:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error: "Internal Server Error" });
       }
     } else if (req.method === "POST") {
       const { material_id, asset_number, material_type, material_description } = req.body;
@@ -59,19 +68,19 @@ export default async function handler(req, res) {
           values: [material_id, asset_number, material_type, material_description],
         });
 
-        res.status(201).json({
+        return res.status(201).json({
           message: "Asset created successfully",
           data: { material_id, asset_number, material_type, material_description },
         });
       } catch (error) {
         console.error("Error inserting asset:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error: "Internal Server Error" });
       }
     } else {
-      res.status(405).json({ message: 'Method Not Allowed' });
+      return res.status(405).json({ message: 'Method Not Allowed' });
     }
   } catch (error) {
     console.error("Unexpected error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }

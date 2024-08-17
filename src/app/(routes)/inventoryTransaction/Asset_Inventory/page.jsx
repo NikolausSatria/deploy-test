@@ -7,7 +7,7 @@ import RouteLayout from "../../RouteLayout";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-function AssetInventoryTransaction({ item }) {
+function AssetInventoryTransaction() {
   const [buttonPopup, setbuttonPopup] = useState(false);
   const [asset_inventory, setAssetInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,13 @@ function AssetInventoryTransaction({ item }) {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
-  async function getInventory(query, page) {
+  useEffect(() => {
+    if (searchQuery.length === 0 || searchQuery.length > 2) {
+      getInventory(searchQuery, currentPage);
+    }
+  }, [searchQuery, currentPage]);
+
+  const getInventory = async (query, page) => {
     setIsLoading(true);
     try {
       const res = await fetch(
@@ -35,13 +41,7 @@ function AssetInventoryTransaction({ item }) {
     } finally {
       setIsLoading(false);
     }
-  }
-
-  useEffect(() => {
-    if (searchQuery.length === 0 || searchQuery.length > 2) {
-      getInventory(searchQuery, currentPage);
-    }
-  }, [searchQuery, currentPage]);
+  };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -49,10 +49,11 @@ function AssetInventoryTransaction({ item }) {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    getInventory(searchQuery);
+    setCurrentPage(1); // Reset to first page on new search
+    getInventory(searchQuery, 1);
   };
 
-  async function downloadCompleteInventory() {
+  const downloadCompleteInventory = async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/assetInventory?allData=true`, {
@@ -70,9 +71,9 @@ function AssetInventoryTransaction({ item }) {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
-  function createPdf(data) {
+  const createPdf = (data) => {
     const doc = new jsPDF();
     const tableColumns = ["No", "ID", "Description", "Type", "Quantity"];
     const tableRows = data.map((item, index) => [
@@ -82,16 +83,17 @@ function AssetInventoryTransaction({ item }) {
       item.type,
       item.qty.toString(),
     ]);
-  
+
     doc.text("Asset Transaction Report", 14, 15);
     autoTable(doc, { startY: 20, head: [tableColumns], body: tableRows });
     doc.save('asset_transaction_report.pdf');
-  }
+  };
 
   return (
     <RouteLayout>
-      <div className="flex w=[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <h1 className="font-medium text-4xl">INVENTORY TRANSACTION</h1>
+      <div className="flex w-[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        <h1 className="font-medium text-4xl">ASSET INVENTORY TRANSACTION</h1>
+
         {/* Search Bar container */}
         <form className="p-7" onSubmit={handleSearch}>
           <label
@@ -142,7 +144,7 @@ function AssetInventoryTransaction({ item }) {
             <div className="flex justify-center items-center">
               <Link
                 href="/inventoryTransaction/Product_Inventory"
-                className="-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300  text-sm leading-5  font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-tertiary transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white active:text-white"
+                className="-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm leading-5 font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-tertiary transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white active:text-white"
               >
                 Product
               </Link>
@@ -154,7 +156,7 @@ function AssetInventoryTransaction({ item }) {
               </Link>
               <Link
                 href="/inventoryTransaction/Material_Inventory"
-                className="-ml-px relative inline-flex items-center px-4 py-2 border rounded border-gray-300  text-sm leading-5 font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white active:text-white"
+                className="-ml-px relative inline-flex items-center px-4 py-2 border rounded border-gray-300 text-sm leading-5 font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white active:text-white"
               >
                 Material
               </Link>
@@ -164,6 +166,7 @@ function AssetInventoryTransaction({ item }) {
 
         {/* the pop Up download menu */}
         <Popup trigger={buttonPopup} setTrigger={setbuttonPopup}></Popup>
+
         {/* Main Page Container */}
         <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
           <table className="min-w-full">
@@ -178,7 +181,7 @@ function AssetInventoryTransaction({ item }) {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-7 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
                 <th className="px-7 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
@@ -189,116 +192,76 @@ function AssetInventoryTransaction({ item }) {
             </thead>
 
             <tbody className="bg-white">
-              {/* Number */}
               {isLoading ? (
-                <p>Loading...</p>
+                <tr>
+                  <td colSpan="6" className="text-center py-4">Loading...</td>
+                </tr>
+              ) : asset_inventory.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">No data available</td>
+                </tr>
               ) : (
-                asset_inventory.map((item, index) => {
-                  return (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="flex justify-center">
-                          <div>
-                            <div className="text-sm leading-5 text-gray-800">
-                              {(currentPage - 1) * itemsPerPage + index + 1}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      {/*ID */}
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="text-sm leading-5 text-gray-800">
-                              #{item.id}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      {/* Description */}
-                      <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="text-sm leading-5 text-blue-900">
-                          {item.description}
-                        </div>
-                      </td>
-                      {/* Type */}
-                      <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="text-sm leading-5 text-blue-900">
-                          {item.type}
-                        </div>
-                      </td>
-                      {/* Quantity */}
-                      <td className=" text-center px-7 py-3 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
-                        <span className="text-xs">{item.qty}</span>
-                      </td>
-                      {/**Detail Button Section */}
-                      <td className="px-7 py-4 whitespace-no-wrap text-center border-b border-gray-500 text-sm leading-5">
-                        <Link
-                          className=" block px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                          href={`/inventoryTransaction/details/page?id=${item.id}`}
-                        >
-                          View Details
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })
+                asset_inventory.map((inventory, index) => (
+                  <tr key={inventory.id} className="hover:bg-gray-100">
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                      {inventory.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                      {inventory.description}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500 text-center">
+                      {inventory.type}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500 text-center">
+                      {inventory.qty}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                      <button
+                        onClick={() => setbuttonPopup(true)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded"
+                      >
+                        Details
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
-          {/* Footer Information */}
-          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
-                <div>
-                  <nav className="relative z-0 inline-flex shadow-sm pb-5 pt-5">
-                    <div className="flex justify-center items-center">
-                      {currentPage > 1 && (
-                        <button
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                          onClick={() => setCurrentPage((current) => current - 1)}
-                        >
-                          Previous
-                        </button>
-                      )}
 
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => (
-                          <button
-                            className={`-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 transition ease-in-out duration-150 ${
-                              page === currentPage
-                                ? "bg-blue-500 text-white" // Ini menandai halaman saat ini
-                                : "bg-white text-blue-700 hover:bg-blue-50"
-                            }`}
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </button>
-                        )
-                      )}
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-500">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
 
-                      {currentPage < totalPages && (
-                        <button
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                          onClick={() => setCurrentPage((current) => current + 1)}
-                        >
-                          Next
-                        </button>
-                      )}
-                    </div>
-                  </nav>
-                </div>
-                <div className="flex place-items-end">
-                          <button
-                          onClick={downloadCompleteInventory} 
-                          disabled={isLoading}
-                          type="button"
-                          className="text-white bg-blue-700 h-[58px] w-[355px] flex items-center justify-around  hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                        >
-                          <BsDownload size={"25px"} />
-                          {isLoading ? 'Downloading...' : 'Download Document in PDF'}
-                        </button>
-                     </div>
-
+          {/* Download Button */}
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={downloadCompleteInventory}
+              className="bg-green-500 text-white px-4 py-2 rounded"
+            >
+              Download PDF
+              <BsDownload className="inline ml-2" />
+            </button>
           </div>
         </div>
       </div>

@@ -12,12 +12,12 @@ function MaterialInventoryTransaction({ item }) {
   const [material_inventory, setMaterialInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
-  async function getInventory (query, page){
+  async function getInventory(query, page) {
     setIsLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/materialInventory?search=${query}&page=${page}&limit=${itemsPerPage}`, {
@@ -26,69 +26,68 @@ function MaterialInventoryTransaction({ item }) {
       });
       const response = await res.json();
       setMaterialInventory(response.material_inventory);
-      setTotalPages(response.totalPages)
+      setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Failed to load Material Inventory Transaction:", error);
     }
     setIsLoading(false);
-      
-    };
+  }
 
-    useEffect(() => {
-      if (searchQuery.length === 0 || searchQuery.length > 2) {
-        getInventory(searchQuery, currentPage);
+  useEffect(() => {
+    getInventory(searchQuery, currentPage);
+  }, [searchQuery, currentPage]);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page on new search
+    getInventory(searchQuery, 1);
+  };
+
+  async function downloadCompleteInventory() {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/materialInventory?allData=true`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (res.status === 200) {
+        createPdf(data.material_inventory);
+      } else {
+        console.error("Failed to download material inventory data:", data.message);
       }
-    }, [searchQuery, currentPage]);
-
-    const handleSearchChange = (e) => {
-      setSearchQuery(e.target.value);
-    };
-  
-    const handleSearch = (e) => {
-      e.preventDefault();
-      getInventory(searchQuery);
-    };
-
-    async function downloadCompleteInventory() {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/materialInventory?allData=true`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        const data = await res.json();
-        if (res.status === 200) {
-          createPdf(data.material_inventory);
-        } else {
-          console.error("Failed to download material inventory data:", data.message);
-        }
-      } catch (error) {
-        console.error("Failed to fetch material inventory data:", error);
-      } finally {
-        setIsLoading(false);
-      }
+    } catch (error) {
+      console.error("Failed to fetch material inventory data:", error);
+    } finally {
+      setIsLoading(false);
     }
-  
-    function createPdf(data) {
-      const doc = new jsPDF();
-      const tableColumns = ["No", "ID", "Description", "Type", "Quantity"];
-      const tableRows = data.map((item, index) => [
-        index + 1,
-        item.id,
-        item.description,
-        item.type,
-        item.qty.toString(),
-      ]);
-    
-      doc.text("Material Transaction Report", 14, 15);
-      autoTable(doc, { startY: 20, head: [tableColumns], body: tableRows });
-      doc.save('material_transaction_report.pdf');
-    }
+  }
+
+  function createPdf(data) {
+    const doc = new jsPDF();
+    const tableColumns = ["No", "ID", "Description", "Type", "Quantity"];
+    const tableRows = data.map((item, index) => [
+      index + 1,
+      item.id,
+      item.description,
+      item.type,
+      item.qty.toString(),
+    ]);
+
+    doc.text("Material Transaction Report", 14, 15);
+    autoTable(doc, { startY: 20, head: [tableColumns], body: tableRows });
+    doc.save('material_transaction_report.pdf');
+  }
 
   return (
     <RouteLayout>
-      <div className="flex w=[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+      <div className="flex w-[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         <h1 className="font-medium text-4xl">INVENTORY TRANSACTION</h1>
+        
         {/* Search Bar container */}
         <form className="p-7" onSubmit={handleSearch}>
           <label
@@ -121,9 +120,9 @@ function MaterialInventoryTransaction({ item }) {
               className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-700 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
               placeholder="Search Inventory by Name"
               value={searchQuery}
-          onChange={handleSearchChange}
+              onChange={handleSearchChange}
               required
-            ></input>
+            />
             <button
               type="submit"
               className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -133,7 +132,7 @@ function MaterialInventoryTransaction({ item }) {
           </div>
         </form>
 
-        {/*Categories Menubar */}
+        {/* Categories Menubar */}
         <div className="flex flex-row-reverse">
           <nav className="relative z-0 inline-flex shadow-sm ">
             <div className="flex justify-center items-center">
@@ -159,8 +158,9 @@ function MaterialInventoryTransaction({ item }) {
           </nav>
         </div>
 
-        {/* the pop Up download menu */}
+        {/* Pop Up download menu */}
         <Popup trigger={buttonPopup} setTrigger={setbuttonPopup}></Popup>
+
         {/* Main Page Container */}
         <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
           <table className="min-w-full">
@@ -186,115 +186,82 @@ function MaterialInventoryTransaction({ item }) {
             </thead>
 
             <tbody className="bg-white">
-              {/* Number */}
-              { isLoading ? (
-                  <p>Loading...</p>
-                ) : 
-                (material_inventory.map((item, index) => {
-                return (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex justify-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
-                            {(currentPage - 1) * itemsPerPage + index + 1}
-                          </div>
-                        </div>
-                      </div>
+              {isLoading ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">Loading...</td>
+                </tr>
+              ) : material_inventory.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-4">No data available</td>
+                </tr>
+              ) : (
+                material_inventory.map((item, index) => (
+                  <tr key={item.id} className="hover:bg-gray-100">
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    {/*ID */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
-                            #{item.id}
-                          </div>
-                        </div>
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
+                      {item.id}
                     </td>
-                    {/* Description */}
-                    <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
-                        {item.description}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                      {item.description}
                     </td>
-                    {/* Type */}
-                    <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
-                        {item.type}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                      {item.type}
                     </td>
-                    {/* Quantity */}
-                    <td className=" text-center px-7 py-3 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
-                      <span className="text-xs">{item.qty}</span>
+                    <td className="px-7 py-4 whitespace-no-wrap text-sm text-gray-500 text-center">
+                      {item.qty}
                     </td>
-                    {/**Detail Button Section */}
-                    <td className="px-7 py-4 whitespace-no-wrap text-center border-b border-gray-500 text-sm leading-5">
-                      <Link
-                        className="block px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                        href={`/inventoryTransaction/details/page?id=${item.id}`}
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium">
+                      <button
+                        onClick={() => setbuttonPopup(true)}
+                        className="text-indigo-600 hover:text-indigo-900"
                       >
                         View Details
-                      </Link>
+                      </button>
                     </td>
                   </tr>
-                );
-              }))}
+                ))
+              )}
             </tbody>
           </table>
-          {/* Footer Information */}
-          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
-            <div>
-                <nav className="relative z-0 inline-flex shadow-sm pb-5 pt-5">
-                    <div className="flex justify-center items-center">
-                      {currentPage > 1 && (
-                        <button
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                          onClick={() => setCurrentPage((current) => current - 1)}
-                        >
-                          Previous
-                        </button>
-                      )}
 
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => (
-                          <button
-                            className={`-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 transition ease-in-out duration-150 ${
-                              page === currentPage
-                                ? "bg-blue-500 text-white" // Ini menandai halaman saat ini
-                                : "bg-white text-blue-700 hover:bg-blue-50"
-                            }`}
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </button>
-                        )
-                      )}
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => {
+                if (currentPage > 1) {
+                  setCurrentPage(currentPage - 1);
+                }
+              }}
+              className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button
+              onClick={() => {
+                if (currentPage < totalPages) {
+                  setCurrentPage(currentPage + 1);
+                }
+              }}
+              className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
 
-                      {currentPage < totalPages && (
-                        <button
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                          onClick={() => setCurrentPage((current) => current + 1)}
-                        >
-                          Next
-                        </button>
-                      )}
-                    </div>
-                  </nav>
-                </div>
-                {/* Download button secton */}
-                <div className="flex place-items-end">
-                          <button
-                          onClick={downloadCompleteInventory} 
-                          disabled={isLoading}
-                          type="button"
-                          className="text-white bg-blue-700 h-[58px] w-[355px] flex items-center justify-around  hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                        >
-                          <BsDownload size={"25px"} />
-                          {isLoading ? 'Downloading...' : 'Download Document in PDF'}
-                        </button>
-                     </div>
+          {/* Download button */}
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={downloadCompleteInventory}
+              className="flex items-center py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              <BsDownload className="mr-2" />
+              Download
+            </button>
           </div>
         </div>
       </div>

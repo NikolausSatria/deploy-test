@@ -36,15 +36,13 @@ function ProductInventoryTransaction({ item }) {
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Failed to load Product Inventory Transaction:", error);
-    } finally{
-    setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    if (searchQuery.length === 0 || searchQuery.length > 2) {
-      getInventory(searchQuery, currentPage);
-    }
+    getInventory(searchQuery, currentPage);
   }, [searchQuery, currentPage]);
 
   const handleSearchChange = (e) => {
@@ -53,7 +51,8 @@ function ProductInventoryTransaction({ item }) {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    getInventory(searchQuery);
+    setCurrentPage(1); // Reset to first page on new search
+    getInventory(searchQuery, 1);
   };
 
   async function downloadCompleteInventory() {
@@ -140,7 +139,7 @@ function ProductInventoryTransaction({ item }) {
           </div>
         </form>
 
-        {/*Categories Menubar */}
+        {/* Categories Menubar */}
         <div className="flex flex-row-reverse">
           <nav className="relative z-0 inline-flex shadow-sm ">
             <div className="flex justify-center items-center">
@@ -166,8 +165,9 @@ function ProductInventoryTransaction({ item }) {
           </nav>
         </div>
 
-        {/* the pop Up download menu */}
+        {/* Popup download menu */}
         <Popup trigger={buttonPopup} setTrigger={setbuttonPopup}></Popup>
+        
         {/* Main Page Container */}
         <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
           <table className="min-w-full">
@@ -182,7 +182,7 @@ function ProductInventoryTransaction({ item }) {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
                 <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
@@ -193,7 +193,6 @@ function ProductInventoryTransaction({ item }) {
             </thead>
 
             <tbody className="bg-white">
-              {/* Number */}
               {isLoading ? (
                 <p>Loading...</p>
               ) : (
@@ -209,41 +208,27 @@ function ProductInventoryTransaction({ item }) {
                           </div>
                         </div>
                       </td>
-                      {/*ID */}
                       <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="text-sm leading-5 text-gray-800">
-                              #{item.id}
-                            </div>
-                          </div>
-                        </div>
+                        {item.id}
                       </td>
-                      {/* Description */}
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                        {item.description}
+                      </td>
                       <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="text-sm leading-5 text-blue-900">
-                          {item.description}
-                        </div>
+                        {item.type}
                       </td>
-                      {/* Type */}
                       <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                        <div className="text-sm leading-5 text-blue-900">
-                          {item.type}
-                        </div>
+                        {item.qty}
                       </td>
-                      {/* Quantity */}
-                      <td className=" text-center px-7 py-3 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
-                        <span className="text-xs">{item.qty}</span>
-                      </td>
-                      {/**Detail Button Section */}
-                      <td className="px-7 py-4 whitespace-no-wrap text-center border-b border-gray-500 text-sm leading-5">
-                        <Link
-                          className=" block px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                          // onClick={() => handleDetails(item.id)}
-                          href={`/inventoryTransaction/details/page?id=${item.id}`}
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                        <button
+                          className="text-white px-3 py-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                          onClick={() => {
+                            setbuttonPopup(true);
+                          }}
                         >
-                          View Details
-                        </Link>
+                          Show
+                        </button>
                       </td>
                     </tr>
                   );
@@ -251,60 +236,30 @@ function ProductInventoryTransaction({ item }) {
               )}
             </tbody>
           </table>
-          {/* Footer Information */}
-          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
-            <div>
-                <nav className="relative z-0 inline-flex shadow-sm pb-5 pt-5">
-                    <div className="flex justify-center items-center">
-                      {currentPage > 1 && (
-                        <button
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                          onClick={() => setCurrentPage((current) => current - 1)}
-                        >
-                          Previous
-                        </button>
-                      )}
-
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => (
-                          <button
-                            className={`-ml-px relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 transition ease-in-out duration-150 ${
-                              page === currentPage
-                                ? "bg-blue-500 text-white" // Ini menandai halaman saat ini
-                                : "bg-white text-blue-700 hover:bg-blue-50"
-                            }`}
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </button>
-                        )
-                      )}
-
-                      {currentPage < totalPages && (
-                        <button
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:text-gray-400 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-100 active:text-gray-500 transition ease-in-out duration-150"
-                          onClick={() => setCurrentPage((current) => current + 1)}
-                        >
-                          Next
-                        </button>
-                      )}
-                    </div>
-                  </nav>
-            </div>
-            {/* Button Pdf download */}
-            <div className="flex place-items-end">
-                          <button
-                          onClick={downloadCompleteInventory} 
-                          disabled={isLoading}
-                          type="button"
-                          className="text-white bg-blue-700 h-[58px] w-[355px] flex items-center justify-around  hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                        >
-                          <BsDownload size={"25px"} />
-                          {isLoading ? 'Downloading...' : 'Download Document in PDF'}
-                        </button>
-               </div>
-
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md"
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md"
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+            <button
+              onClick={downloadCompleteInventory}
+              className="text-white px-3 py-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+              <BsDownload /> Download
+            </button>
           </div>
         </div>
       </div>

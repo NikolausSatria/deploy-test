@@ -3,13 +3,13 @@ import { query } from "@/libs/db";
 export default async function handler(req, res) {
   try {
     const { method, query: reqQuery, body } = req;
-    
+
     if (method === "GET") {
       const { search, page = 1, limit = 25 } = reqQuery;
       const pageNum = parseInt(page, 10);
       const limitNum = parseInt(limit, 10);
 
-      if (isNaN(pageNum) || isNaN(limitNum)) {
+      if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
         return res.status(400).json({ error: "Invalid page or limit" });
       }
 
