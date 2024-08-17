@@ -25,6 +25,9 @@ export default async function handler(req, res) {
       sqlQuery += ` ORDER BY product_id LIMIT ? OFFSET ?`;
       values.push(parseInt(limit, 10), offset);
 
+      console.log("SQL Query:", sqlQuery);
+      console.log("Values:", values);
+
       try {
         const totalCountResult = await query({
           query: countQuery,
@@ -76,7 +79,6 @@ export default async function handler(req, res) {
       try {
         await query({
           query: "INSERT INTO product_db (product_id, product_description, nect_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          // query: "INSERT INTO product_db (product_id, product_description, neck_type, volume, material, weight, color, bottles_per_coli, coli_per_box, uom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
           values: processedValues,
         });
 
