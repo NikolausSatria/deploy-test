@@ -108,7 +108,7 @@ function DnSectionPage() {
   const handleSubmit = async (e) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/inputDN`,
+        `${process.env.NEXT_PUBLIC_URL}/api/inputdn`,
         {
           method: "POST",
           headers: {

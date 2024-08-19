@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { BsDatabaseFill, BsDatabaseAdd } from "react-icons/bs";
-import { useEffect, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import RouteLayout from "../../RouteLayout";
 
@@ -28,7 +27,7 @@ function Page() {
         }
       );
       const response = await res.json();
-      setSku(response.sku);
+      setSku(response.assets);
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Failed to load db Asset:", error);
@@ -38,9 +37,7 @@ function Page() {
   }
 
   useEffect(() => {
-    if (searchQuery.length === 0 || searchQuery.length > 2) {
-      getSku(searchQuery, currentPage);
-    }
+    getSku(searchQuery, currentPage);
   }, [searchQuery, currentPage]);
 
   const handleSearchChange = (e) => {
@@ -49,7 +46,8 @@ function Page() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    getSku(searchQuery);
+    setCurrentPage(1); // Reset to first page on new search
+    getSku(searchQuery, 1);
   };
 
   return (
@@ -57,13 +55,13 @@ function Page() {
       <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         {/* Header Button */}
         <div className="flex justify-between items-center">
-          <Link href={"/databaseSKU"}>
+          <Link href="/databaseSKU">
             <button>
               <BiArrowBack className="cursor-pointer" size={"25px"} />
             </button>
           </Link>
           <h1 className="font-medium text-3xl">Asset</h1>
-          <Link href={"databaseSKU/Asset/AssetForm"}>
+          <Link href="/databaseSKU/Asset/AssetForm">
             <button>
               <BsDatabaseAdd size={"30px"} className="cursor-pointer" />
             </button>
@@ -167,70 +165,65 @@ function Page() {
                     Loading...
                   </td>
                 </tr>
-              ) : sku.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="text-center py-4">
-                    No data available.
-                  </td>
-                </tr>
-              ) : (
-                sku.map((sku, index) => (
-                  <tr key={sku.material_id}>
+              ) : Array.isArray(sku) && sku.length > 0 ? (
+                sku.map((item, index) => (
+                  <tr key={item.material_id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div>
-                        <div className="text-sm leading-5 text-gray-800">
-                          {(currentPage - 1) * itemsPerPage + index + 1}
-                        </div>
+                      <div className="text-sm leading-5 text-gray-800">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
-                            #{sku.material_id}
-                          </div>
-                        </div>
+                      <div className="text-sm leading-5 text-gray-800">
+                        #{item.material_id}
                       </div>
                     </td>
                     <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
                       <div className="text-sm leading-5 text-blue-900">
-                        {sku.asset_number}
+                        {item.asset_number}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-sm leading-5 text-gray-600">
-                      {sku.material_type}
+                      {item.material_type}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-sm leading-5 text-gray-600">
-                      {sku.material_description}
+                      {item.material_description}
                     </td>
                   </tr>
                 ))
+              ): (
+                <tr>
+                  <td colSpan="11" className="text-center py-4">
+                    No data available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-center mt-4">
-            <nav className="relative z-0 inline-flex shadow-sm">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                Previous
-              </button>
-              <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                Next
-              </button>
-            </nav>
-          </div>
+        </div>
+        {/* Pagination */}
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={() =>
+              setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
+            }
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </RouteLayout>

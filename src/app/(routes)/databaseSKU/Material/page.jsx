@@ -30,16 +30,14 @@ function Material() {
       setSku(response.materials);
       setTotalPages(response.totalPages);
     } catch (error) {
-      console.error("Failed to load db Product:", error);
+      console.error("Failed to load materials:", error);
     } finally {
       setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    if (searchQuery.length === 0 || searchQuery.length > 2) {
-      getSku(searchQuery, currentPage);
-    }
+    getSku(searchQuery, currentPage);
   }, [searchQuery, currentPage]);
 
   const handleSearchChange = (e) => {
@@ -48,7 +46,8 @@ function Material() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    getSku(searchQuery, 1); // Reset to page 1 on search
+    setCurrentPage(1); // Reset to the first page on search
+    getSku(searchQuery, 1);
   };
 
   return (
@@ -56,18 +55,19 @@ function Material() {
       <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         {/* Header Button */}
         <div className="flex justify-between items-center">
-          <Link href={"/databaseSKU"}>
+          <Link href="/databaseSKU">
             <button>
-              <BiArrowBack className="cursor-pointer" size={"25px"} />
+              <BiArrowBack className="cursor-pointer" size="25px" />
             </button>
           </Link>
           <h1 className="font-medium text-3xl">Material</h1>
-          <Link href={"/databaseSKU/Material/MaterialForm"}>
+          <Link href="/databaseSKU/Material/MaterialForm">
             <button>
-              <BsDatabaseAdd size={"30px"} className="cursor-pointer" />
+              <BsDatabaseAdd size="30px" className="cursor-pointer" />
             </button>
           </Link>
         </div>
+
         {/* Search Bar container */}
         <form className="p-7" onSubmit={handleSearch}>
           <label
@@ -102,7 +102,7 @@ function Material() {
               value={searchQuery}
               onChange={handleSearchChange}
               required
-            ></input>
+            />
             <button
               type="submit"
               className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -111,9 +111,10 @@ function Material() {
             </button>
           </div>
         </form>
+
         {/* Categories Menubar */}
         <div className="flex flex-row-reverse">
-          <nav className="relative z-0 inline-flex shadow-sm ">
+          <nav className="relative z-0 inline-flex shadow-sm">
             <div className="flex justify-center items-center">
               <Link
                 href="/databaseSKU/Product"
@@ -137,98 +138,81 @@ function Material() {
           </nav>
         </div>
 
-        <div className="justify-center items-center  max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
-          {isLoading ? (
-            <p className="text-center text-gray-500">Loading...</p>
-          ) : sku_material.length === 0 ? (
-            <p className="text-center text-gray-500">No data available.</p>
-          ) : (
-            <table className="min-w-full">
-              {/* Head table */}
-              <thead>
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
+          <table className="min-w-full">
+            {/* Head table */}
+            <thead>
+              <tr>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                  No
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  ID
+                </th>
+                <th className="px-7 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                  Material Description
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                  Material Type
+                </th>
+              </tr>
+            </thead>
+            {/* Table Body */}
+            <tbody className="bg-white">
+              {isLoading ? (
                 <tr>
-                  <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
-                    No
-                  </th>
-                  <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-7 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
-                    Material Description
-                  </th>
-                  <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
-                    Material Type
-                  </th>
+                  <td colSpan="4" className="text-center py-4">Loading...</td>
                 </tr>
-              </thead>
-              <tbody className="bg-white">
-                {sku_material.map((sku_material, index) => (
-                  <tr key={sku_material.id}>
+              ) : Array.isArray(sku_material) && sku_material.length > 0 ? (
+                sku_material.map((material, index) => (
+                  <tr key={material.id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div>
-                        <div className="text-sm leading-5 text-gray-800">
-                          {(currentPage - 1) * itemsPerPage + index + 1}
-                        </div>
-                      </div>
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
-                            #{sku_material.material_id}
-                          </div>
-                        </div>
-                      </div>
+                      #{material.material_id}
                     </td>
-
-                    {/* Material Description */}
                     <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
                       <div className="text-sm text-center leading-5 text-blue-900">
-                        {sku_material.material_description}
+                        {material.material_description}
                       </div>
                     </td>
-                    {/* Material Type */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b text-blue-900 text-center border-gray-500 text-sm leading-5">
-                      {sku_material.material_type}
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center text-sm leading-5 text-blue-900">
+                      {material.material_type}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {/* Pagination */}
-          <div className="flex items-center justify-center mt-4">
-            <nav className="relative z-0 inline-flex shadow-sm">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Previous
-              </button>
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
-                    currentPage === index + 1
-                      ? "bg-blue-700 text-white"
-                      : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Next
-              </button>
-            </nav>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center py-4">No materials found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Pagination */}
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={() =>
+              setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
+            }
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </RouteLayout>

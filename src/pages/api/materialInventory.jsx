@@ -12,45 +12,51 @@ export default async function handler(req, res) {
     const offset = (page - 1) * limit;
 
     let sqlQuery = `
-      SELECT idt.date_at, SUM(CASE WHEN idt.in_out LIKE 'IN%' THEN idt.qty WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty ELSE 0 END) as qty, idt.in_out, md.material_id as id, md.material_description as description, 'material' as type
-      FROM inventories_db idt
-      INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
-      INNER JOIN material_db md ON ds.product_id = md.material_id
+      SELECT idt.date_at, 
+             SUM(CASE WHEN idt.in_out LIKE 'IN%' THEN idt.qty WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty ELSE 0 END) AS qty, 
+             idt.in_out, 
+             md.material_id AS id, 
+             md.material_description AS description, 
+             'material' AS type 
+      FROM inventories_db idt 
+      INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id 
+      INNER JOIN material_db md ON ds.product_id = md.material_id 
     `;
-    
-    let countQuery = `
-      SELECT COUNT(*) as total_count
-      FROM (
-        SELECT idt.date_at, SUM(CASE WHEN idt.in_out LIKE 'IN%' THEN idt.qty WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty ELSE 0 END) as qty, idt.in_out, md.material_id as id, md.material_description as description, 'material' as type
-        FROM inventories_db idt
-        INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
-        INNER JOIN material_db md ON ds.product_id = md.material_id
-        GROUP BY ds.product_id
-      ) as combine
-    `;
-    
-    let values = [];
 
+    let countQuery = `
+      SELECT COUNT(*) AS total_count 
+      FROM (
+        SELECT idt.date_at, 
+               SUM(CASE WHEN idt.in_out LIKE 'IN%' THEN idt.qty WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty ELSE 0 END) AS qty, 
+               idt.in_out, 
+               md.material_id AS id, 
+               md.material_description AS description, 
+               'material' AS type 
+        FROM inventories_db idt 
+        INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id 
+        INNER JOIN material_db md ON ds.product_id = md.material_id 
+      ) AS combine
+    `;
+
+    let values = [];
     if (search) {
       sqlQuery += `
         WHERE md.material_description LIKE CONCAT('%', ?, '%')
       `;
-      countQuery += `
-        WHERE md.material_description LIKE CONCAT('%', ?, '%')
-      `;
+      countQuery += ` WHERE combine.description LIKE CONCAT('%', ?, '%')`;
       values.push(search);
     }
 
-    if (allData !== 'true') {
+    if (allData !== "true") {
       sqlQuery += `
-        GROUP BY ds.product_id
-        ORDER BY idt.created_at DESC
+        GROUP BY md.material_id 
+        ORDER BY idt.created_at DESC 
         LIMIT ? OFFSET ?
       `;
       values.push(parseInt(limit), parseInt(offset));
     } else {
       sqlQuery += `
-        GROUP BY ds.product_id
+        GROUP BY md.material_id 
         ORDER BY idt.created_at DESC
       `;
     }
@@ -58,7 +64,6 @@ export default async function handler(req, res) {
     try {
       let totalItems = 0;
       let totalPages = 0;
-
       const material_inventory = await query({
         query: sqlQuery,
         values: values,
@@ -76,9 +81,8 @@ export default async function handler(req, res) {
         totalPages = 1;
       }
 
-      res.status(200).json({ material_inventory: material_inventory, totalPages: totalPages });
+      res.status(200).json({ material_inventory, totalPages });
     } catch (error) {
-      console.error("Error when trying to fetch data from the database:", error);
       res.status(500).json({ message: "Error when trying to fetch data from the database" });
     }
   } else {

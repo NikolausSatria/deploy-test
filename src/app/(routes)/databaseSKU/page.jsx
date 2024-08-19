@@ -15,7 +15,7 @@ function DatabaseSku() {
   async function getSku(query, page) {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/dbSku?search=${query}&page=${page}&limit=${itemsPerPage}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/dbsku?search=${query}&page=${page}&limit=${itemsPerPage}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -25,7 +25,7 @@ function DatabaseSku() {
         throw new Error(`Error: ${res.status}`);
       }
       const response = await res.json();
-      setDbSku(response.dbSku);
+      setDbSku(response.dbsku);
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Failed to load dbSku:", error);
@@ -150,7 +150,7 @@ function DatabaseSku() {
                 <tr>
                   <td colSpan="7" className="text-center py-4">Loading...</td>
                 </tr>
-              ) : (
+              ) : Array.isArray(dbSku) && dbSku.length > 0 ? (
                 dbSku.map((item, index) => (
                   <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
@@ -176,28 +176,39 @@ function DatabaseSku() {
                     <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-sm leading-5"></td>
                   </tr>
                 ))
+              ) : (
+                <tr>
+                  <td colSpan="11" className="text-center py-4">
+                    No data available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
-          <div className="flex justify-between items-center p-4">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 border border-gray-300 bg-white text-sm text-blue-700 rounded-lg hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-500">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 border border-gray-300 bg-white text-sm text-blue-700 rounded-lg hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Next
-            </button>
-          </div>
+        </div>
+          {/* Pagination */}
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={() =>
+              setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
+            }
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </RouteLayout>

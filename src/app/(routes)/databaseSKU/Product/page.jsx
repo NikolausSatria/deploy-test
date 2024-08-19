@@ -260,7 +260,7 @@ function DatabaseSku() {
             Next
           </button>
         </div>
-      </div>
+      </div> j
     </RouteLayout>
   );
 }

@@ -157,7 +157,7 @@ export default async function handler(req, res) {
           message: "Data Successfully Input",
           data: {
             inventory_id: addData.insertId,
-            sku_id: addDataSku.insertId,
+            sku_id: addData.insertId,
           },
         });
       }

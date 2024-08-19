@@ -6,13 +6,16 @@ import Popup from "../Popup";
 import RouteLayout from "../../RouteLayout";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useRouter } from "next/navigation";
 
-function AssetInventoryTransaction() {
-  const [buttonPopup, setbuttonPopup] = useState(false);
-  const [asset_inventory, setAssetInventory] = useState([]);
+
+function AssetInventoryTransaction({item}) {
+  const router = useRouter();
+
+  const [buttonPopup, setButtonPopup] = useState(false);
+  const [assetInventory, setAssetInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
@@ -27,14 +30,19 @@ function AssetInventoryTransaction() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/assetInventory?search=${query}&page=${page}&limit=${itemsPerPage}`,
+        `${process.env.NEXT_PUBLIC_URL}/api/assetinventory?search=${query}&page=${page}&limit=${itemsPerPage}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         }
       );
       const response = await res.json();
-      setAssetInventory(response.asset_inventory);
+      if (Array.isArray(response.asset_inventory)) {
+        setAssetInventory(response.asset_inventory);
+      } else {
+        console.error("Asset Inventory is not an array.");
+        setAssetInventory([]);
+      }
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Failed to load Asset Inventory Transaction:", error);
@@ -49,20 +57,27 @@ function AssetInventoryTransaction() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1); // Reset ke halaman 1 setiap kali pencarian dilakukan
     getInventory(searchQuery, 1);
+  };
+  const handleDetails = (item) => {
+    router.push(`/inventoryTransaction/details/page?id=${item}`);
   };
 
   const downloadCompleteInventory = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/assetInventory?allData=true`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/assetinventory?allData=true`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
       if (res.status === 200) {
-        createPdf(data.asset_inventory);
+        if (Array.isArray(data.asset_inventory)) {
+          createPdf(data.asset_inventory);
+        } else {
+          console.error("Downloaded data is not an array.");
+        }
       } else {
         console.error("Failed to download asset inventory data:", data.message);
       }
@@ -138,9 +153,9 @@ function AssetInventoryTransaction() {
           </div>
         </form>
 
-        {/*Categories Menubar */}
+        {/* Categories Menubar */}
         <div className="flex flex-row-reverse">
-          <nav className="relative z-0 inline-flex shadow-sm ">
+          <nav className="relative z-0 inline-flex shadow-sm">
             <div className="flex justify-center items-center">
               <Link
                 href="/inventoryTransaction/Product_Inventory"
@@ -165,7 +180,7 @@ function AssetInventoryTransaction() {
         </div>
 
         {/* the pop Up download menu */}
-        <Popup trigger={buttonPopup} setTrigger={setbuttonPopup}></Popup>
+        <Popup trigger={buttonPopup} setTrigger={setButtonPopup}></Popup>
 
         {/* Main Page Container */}
         <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
@@ -187,82 +202,79 @@ function AssetInventoryTransaction() {
                 <th className="px-7 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-blue-500">Action
+                </th>
               </tr>
             </thead>
-
-            <tbody className="bg-white">
+            <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">Loading...</td>
+                  <td colSpan="5" className="text-center py-4">Loading...</td>
                 </tr>
-              ) : asset_inventory.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-4">No data available</td>
-                </tr>
-              ) : (
-                asset_inventory.map((inventory, index) => (
-                  <tr key={inventory.id} className="hover:bg-gray-100">
+              ) : assetInventory.length > 0 ? (
+                assetInventory.map((item, index) => (
+                  <tr key={index}>
                     <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
                       {index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
-                      {inventory.id}
+                      {item.id}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
-                      {inventory.description}
+                      {item.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500 text-center">
-                      {inventory.type}
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-center text-gray-500">
+                      {item.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500 text-center">
-                      {inventory.qty}
+                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-center text-gray-500">
+                      {item.qty}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap text-center">
                       <button
-                        onClick={() => setbuttonPopup(true)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleDetails(item.id)}
+                        className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
                       >
                         Details
                       </button>
                     </td>
                   </tr>
                 ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center py-4">No Data Available</td>
+                </tr>
               )}
             </tbody>
           </table>
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           <div className="flex justify-between items-center mt-4">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               disabled={currentPage === 1}
-              className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
             >
               Previous
             </button>
-            <span className="text-sm text-gray-500">
-              Page {currentPage} of {totalPages}
-            </span>
+            <span>Page {currentPage} of {totalPages}</span>
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               disabled={currentPage === totalPages}
-              className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
             >
               Next
             </button>
           </div>
 
           {/* Download Button */}
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={downloadCompleteInventory}
-              className="bg-green-500 text-white px-4 py-2 rounded"
-            >
-              Download PDF
-              <BsDownload className="inline ml-2" />
-            </button>
-          </div>
+          <button
+            onClick={downloadCompleteInventory}
+            className="mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold py-2 px-4 rounded"
+          >
+            <BsDownload className="inline mr-2" />
+            Download All
+          </button>
+
         </div>
       </div>
     </RouteLayout>

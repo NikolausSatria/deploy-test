@@ -33,9 +33,6 @@ export default async function handler(req, res) {
 
       sqlQuery += ` ORDER BY material_id LIMIT ${limitNum} OFFSET ${offset}`;
 
-      console.log("SQL Query:", sqlQuery);
-      console.log("Values:", values);
-
       try {
         const totalCountResult = await query({
           query: countQuery,
@@ -65,8 +62,10 @@ export default async function handler(req, res) {
         maximum_stock,
       } = req.body;
 
-      if (!material_id || !material_type || !material_description || !minimum_stock || !rop || !maximum_stock) {
-        return res.status(400).json({ error: "Missing required fields" });
+      // Validate input
+      if (!material_id || !material_type || !material_description || 
+          isNaN(minimum_stock) || isNaN(rop) || isNaN(maximum_stock)) {
+        return res.status(400).json({ error: "Missing or invalid required fields" });
       }
 
       try {
@@ -79,9 +78,9 @@ export default async function handler(req, res) {
             material_id,
             material_type,
             material_description,
-            minimum_stock,
-            rop,
-            maximum_stock,
+            parseFloat(minimum_stock),
+            parseFloat(rop),
+            parseFloat(maximum_stock),
           ],
         });
 

@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import AsyncSelect from "react-select/async";
 import makeAnimated from "react-select/animated";
+import { components } from "react-select-virtualized";
 import { useSession } from "next-auth/react";
+
 
 function InputInventory() {
   const optionProductDetail = ["IN-INT", "OUT-INT", "IN-EXT", "OUT-EXT"];
@@ -13,6 +15,46 @@ function InputInventory() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
+  console.log(session);
+
+  useEffect(() => {
+    if (id) {
+      // Fetch data dari API berdasarkan ID
+      fetch(`/api/updateInventory?id=${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          // Pastikan respons API sesuai dengan struktur
+          // console.log(data.inventory);
+          const inventoryData = data.inventory[0];
+          const formattedDate = inventoryData.date_at.split("T")[0];
+          setState({
+            in_out: inventoryData.in_out || null,
+            date_at: formattedDate || null,
+            lot: inventoryData.lot || null,
+            dn: inventoryData.dn || null,
+            po: inventoryData.po || null,
+            mo: inventoryData.mo || null,
+            qty: inventoryData.qty || 0,
+          });
+
+          // console.log(inventoryData.product_id);
+          loadOption(inventoryData.product_id).then((options) => {
+            const productOption = options.find(
+              (option) => option.value === inventoryData.product_id
+            );
+            if (productOption) {
+              setSelectedProduct(productOption);
+            } else {
+              console.log(
+                "Product not found for ID:",
+                inventoryData.product_id
+              );
+            }
+          });
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+  }, [id]);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [state, setState] = useState({
@@ -25,39 +67,18 @@ function InputInventory() {
     qty: 0,
   });
 
-  useEffect(() => {
-    if (id) {
-      fetch(`/api/updateInventory?id=${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          const inventoryData = data.inventory[0];
-          const formattedDate = inventoryData.date_at.split("T")[0];
-          setState({
-            in_out: inventoryData.in_out || "",
-            date_at: formattedDate || "",
-            lot: inventoryData.lot || "",
-            dn: inventoryData.dn || "",
-            po: inventoryData.po || "",
-            mo: inventoryData.mo || "",
-            qty: inventoryData.qty || 0,
-          });
-
-          loadOption(inventoryData.product_id).then((options) => {
-            const productOption = options.find(
-              (option) => option.value === inventoryData.product_id
-            );
-            setSelectedProduct(productOption || null);
-          });
-        })
-        .catch((error) => console.error("Error:", error));
-    }
-  }, [id]);
+  // search inventory
+  const animatedComponent = makeAnimated();
 
   const loadOption = (inputValue) => {
-    const apiUrl = `${process.env.NEXT_PUBLIC_URL}/api/search?search_query=${encodeURIComponent(inputValue)}`;
+    const apiUrl = `${
+      process.env.NEXT_PUBLIC_URL
+    }/api/search?search_query=${encodeURIComponent(inputValue)}`;
     return fetch(apiUrl)
       .then((response) => {
-        if (!response.ok) throw new Error("Network response was not ok");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
         return response.json();
       })
       .then((json) =>
@@ -67,13 +88,20 @@ function InputInventory() {
         }))
       )
       .catch((error) => {
-        console.error("Fetch operation problem:", error);
-        return [];
+        console.error(
+          "There has been a problem with your fetch operation:",
+          error
+        );
       });
   };
 
-  const handleSelectChange = (selectedOption) => {
-    setSelectedProduct(selectedOption);
+  const handleSelectChange = (event) => {
+    // setSelectedState(event.target.value)
+    const selected = event.target.value;
+    setState((prevState) => ({
+      ...prevState,
+      in_out: selected,
+    }));
   };
 
   const isEmpty = (value) => !value || value === "";
@@ -110,15 +138,25 @@ function InputInventory() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    console.log(selectedProduct);
+  
+    // Validasi formulir
+    const isFormValid = validateForm();
+    if (!isFormValid) return;
+  
+    // Periksa sesi
     if (!session) {
       toast.error("Please login!");
       return;
     }
-
+  
+    // Tentukan metode HTTP dan URL
     const method = id ? "PUT" : "POST";
-    const url = id ? `${process.env.NEXT_PUBLIC_URL}/api/updateInventory?id=${id}` : `${process.env.NEXT_PUBLIC_URL}/api/inventory`;
-
+    const url = id
+      ? `${process.env.NEXT_PUBLIC_URL}/api/updateinventory?id=${id}`
+      : `${process.env.NEXT_PUBLIC_URL}/api/inventory`;
+  
+    // Data POST
     const postData = {
       method: method,
       headers: {
@@ -136,18 +174,32 @@ function InputInventory() {
         qty: state.qty,
       }),
     };
-
+  
     try {
+      // Kirim request
       const res = await fetch(url, postData);
+  
+      // Tangani respons
       if (res.ok) {
         router.push("/inventoryTransaction");
         toast.success("Data Successfully Input");
       } else {
-        toast.error("Failed Input");
+        const errorData = await res.json(); // Mendapatkan data kesalahan dari respons
+        toast.error(`Failed Input: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
-      toast.error("An error occurred while submitting");
+      console.error("Request failed:", error);
+      toast.error("An error occurred while submitting the data");
     }
+  };
+  
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setState((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
   return (
@@ -157,38 +209,44 @@ function InputInventory() {
           <h1 className="font-medium text-4xl">INPUT INVENTORY</h1>
         </div>
 
+        {/** form input container */}
         <div className="bg-white shadow-md rounded px-8 pt-4 pb-5 mb-4 flex flex-col my-2 border-2 border-blue-500">
           <div className="-mx-3 md:flex mb-6">
             <div className="md:w-full w-800px px-3 mb-6 md:mb-0">
               <label
                 className="block tracking-wide text-grey-darker text-medium mb-4"
-                htmlFor="product"
+                name="input"
+                htmlFor="input"
               >
                 Product Name
               </label>
+              {/* select searchbar Section */}
+
               <AsyncSelect
                 cacheOptions
                 loadOptions={loadOption}
                 defaultOptions
                 value={selectedProduct}
-                onChange={handleSelectChange}
-                components={makeAnimated()}
+                onChange={setSelectedProduct}
+                components={{ ...animatedComponent, ...components }}
                 isDisabled={!!id}
               />
             </div>
           </div>
 
           <div className="flex mb-5 space-x-5">
+            {/*Quantity Container */}
             <div className="w-1/2">
               <label
-                htmlFor="quantity"
+                htmlFor="guest"
                 className="block mb-2 text-sm font-medium text-gray-900"
               >
                 Quantity
               </label>
               <input
                 type="number"
-                id="quantity"
+                name="guest"
+                id="guest"
                 placeholder="Enter Amount of Quantity"
                 min="0"
                 className="appearance-none rounded-md border border-[#545353] bg-white py-3 px-6 w-full text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
@@ -198,16 +256,18 @@ function InputInventory() {
               />
             </div>
 
+            {/* date Section */}
             <div className="w-1/2">
               <label
-                htmlFor="date"
+                htmlFor="datecontainer"
                 className="mb-2 block text-sm font-medium text-[#545353]"
               >
                 Date
               </label>
               <input
                 type="date"
-                id="date"
+                name="date"
+                id="datecontainer"
                 className="w-full appearance-none rounded-md border border-[#545353] bg-white py-3 px-6 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
                 value={state.date_at}
                 onChange={(e) =>
@@ -217,102 +277,140 @@ function InputInventory() {
             </div>
           </div>
 
+          {/* Three options for Data inventory */}
           <div className="-mx-3 md:flex mb-5">
             <div className="md:w-full px-3">
               <label
                 className="block tracking-wide text-grey-darker text-medium mb-2"
-                htmlFor="in_out"
+                htmlFor="grid-state"
               >
                 Transaction Type
               </label>
-              <select
-                id="in_out"
-                className="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-md leading-tight focus:outline-none focus:shadow-outline"
-                value={state.in_out}
-                onChange={(e) => setState({ ...state, in_out: e.target.value })}
-              >
-                <option value="">Select Type</option>
-                {optionProductDetail.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  onChange={handleSelectChange}
+                  value={state.in_out}
+                  className="block appearance-none w-full bg-grey-lighter border border-[#545353] text-grey-darker py-3 px-4 pr-8 rounded"
+                  id="grid-state"
+                >
+                  <option value="">--- Select Detail ---</option>
+
+                  {optionProductDetail.map((optionProduct) => {
+                    return (
+                      <option key={optionProduct} value={optionProduct}>
+                        {optionProduct}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
           </div>
 
-          {state.in_out === "IN-EXT" || state.in_out === "OUT-EXT" ? (
-            <>
-              <div className="mb-5">
-                <label
-                  htmlFor="dn"
-                  className="block mb-2 text-sm font-medium text-gray-900"
-                >
-                  DN No.
-                </label>
-                <input
-                  type="text"
-                  id="dn"
-                  placeholder="Enter DN Number"
-                  className="appearance-none rounded-md border border-[#545353] bg-white py-3 px-6 w-full text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                  value={state.dn}
-                  onChange={(e) => setState({ ...state, dn: e.target.value })}
-                />
-              </div>
-              <div className="mb-5">
-                <label
-                  htmlFor="po"
-                  className="block mb-2 text-sm font-medium text-gray-900"
-                >
-                  PO No.
-                </label>
-                <input
-                  type="text"
-                  id="po"
-                  placeholder="Enter PO Number"
-                  className="appearance-none rounded-md border border-[#545353] bg-white py-3 px-6 w-full text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
-                  value={state.po}
-                  onChange={(e) => setState({ ...state, po: e.target.value })}
-                />
-              </div>
-            </>
-          ) : null}
-
-          {state.in_out === "IN-INT" || state.in_out === "OUT-INT" ? (
-            <div className="mb-5">
+          <div className="px-3 flex space-x-5">
+            {/* Lot No */}
+            <div className="mb-5 w-1/2">
               <label
-                htmlFor="mo"
+                htmlFor="neckType"
+                className="block mb-2 text-sm font-medium text-gray-900"
+              >
+                LOT No.
+              </label>
+              <input
+                type="text"
+                autoComplete="off"
+                id="neckType"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="LOT No."
+                value={state.lot}
+                onChange={(e) => setState({ ...state, lot: e.target.value })}
+                required
+              />
+            </div>
+            {/* DN No.*/}
+            <div className="mb-5 w-1/2">
+              <label
+                htmlFor="material"
+                className="block mb-2 text-sm font-medium text-gray-900"
+              >
+                DN No.
+              </label>
+              <input
+                type="text"
+                autoComplete="off"
+                disabled={
+                  state.in_out === "IN-INT" || state.in_out === "OUT-INT"
+                }
+                id="material"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="DN No."
+                required={
+                  state.in_out === "INT-EXT" || state.in_out === "OUT-EXT"
+                }
+                value={state.dn}
+                onChange={(e) => setState({ ...state, dn: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="px-3 flex space-x-5">
+            {/* PO NO. */}
+            <div className="mb-5 w-1/2">
+              <label
+                htmlFor="Weight"
+                className="block mb-2 text-sm font-medium text-gray-900"
+              >
+                PO No.
+              </label>
+              <input
+                //   type="number"
+                autoComplete="off"
+                disabled={
+                  state.in_out === "IN-INT" || state.in_out === "OUT-INT"
+                }
+                id="Weight"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="PO No."
+                required={
+                  state.in_out === "INT-EXT" || state.in_out === "OUT-EXT"
+                }
+                value={state.po}
+                onChange={(e) => setState({ ...state, po: e.target.value })}
+              />
+            </div>
+            {/* MO No.*/}
+            <div className="mb-5 w-1/2">
+              <label
+                htmlFor="productMaterial"
                 className="block mb-2 text-sm font-medium text-gray-900"
               >
                 MO No.
               </label>
               <input
-                type="text"
-                id="mo"
-                placeholder="Enter MO Number"
-                className="appearance-none rounded-md border border-[#545353] bg-white py-3 px-6 w-full text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md"
+                id="productMaterial"
+                autoComplete="off"
+                disabled={
+                  state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"
+                }
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="MO No."
+                required={
+                  state.in_out === "IN-INT" || state.in_out === "OUT-INT"
+                }
                 value={state.mo}
                 onChange={(e) => setState({ ...state, mo: e.target.value })}
               />
             </div>
-          ) : null}
-
-          <div className="flex justify-between mt-8">
+          </div>
+          {/* Submit button */}
+          <a href="">
             <button
               type="button"
-              onClick={() => router.push("/inventoryTransaction")}
-              className="bg-red-500 text-white py-2 px-4 rounded"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
+              className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
               onClick={handleSubmit}
-              className="bg-blue-500 text-white py-2 px-4 rounded"
             >
-              {id ? "Update" : "Submit"}
+              Submit
             </button>
-          </div>
+          </a>
         </div>
       </div>
     </RouteLayout>

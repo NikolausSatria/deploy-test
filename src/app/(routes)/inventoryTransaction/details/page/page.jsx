@@ -52,7 +52,7 @@ const Details = ({ item }) => {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`/api/updateInventory?id=${id}`, {
+        fetch(`/api/updateinventory?id=${id}`, {
           method: "DELETE",
         })
           .then((response) => response.json())
