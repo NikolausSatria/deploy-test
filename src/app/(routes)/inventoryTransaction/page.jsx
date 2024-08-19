@@ -202,11 +202,7 @@ function InventoryTransaction({ item }) {
                 <tr>
                   <td colSpan="6" className="text-center py-4">Loading...</td>
                 </tr>
-              ) : inventory.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-4">No data available</td>
-                </tr>
-              ) : (
+              ) : Array.isArray(inventory) && inventory.length > 0? (
                 inventory.map((item, index) => (
                   <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
@@ -244,6 +240,12 @@ function InventoryTransaction({ item }) {
                     </td>
                   </tr>
                 ))
+              ): (
+                <tr>
+                  <td colSpan="11" className="text-center py-4">
+                    No data available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

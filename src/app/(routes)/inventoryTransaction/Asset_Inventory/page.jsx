@@ -211,7 +211,7 @@ function AssetInventoryTransaction({item}) {
                 <tr>
                   <td colSpan="5" className="text-center py-4">Loading...</td>
                 </tr>
-              ) : assetInventory.length > 0 ? (
+              ) : Array.isArray(assetInventory) && assetInventory.length > 0 ? (
                 assetInventory.map((item, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
@@ -241,7 +241,9 @@ function AssetInventoryTransaction({item}) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-4">No Data Available</td>
+                  <td colSpan="11" className="text-center py-4">
+                    No data available
+                  </td>
                 </tr>
               )}
             </tbody>

@@ -213,13 +213,7 @@ function MaterialInventoryTransaction({item}) {
                     Loading...
                   </td>
                 </tr>
-              ) : material_inventory.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-4">
-                    No data available
-                  </td>
-                </tr>
-              ) : (
+              ) : Array.isArray(material_inventory) && material_inventory.length >0 ? (
                 material_inventory.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-100">
                     <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
@@ -247,6 +241,12 @@ function MaterialInventoryTransaction({item}) {
                     </td>
                   </tr>
                 ))
+              ): (
+                <tr>
+                  <td colSpan="11" className="text-center py-4">
+                    No data available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

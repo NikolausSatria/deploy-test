@@ -219,7 +219,7 @@ function ProductInventoryTransaction() {
                     Loading...
                   </td>
                 </tr>
-              ) : (
+              ) : Array.isArray(productInventory) && productInventory.length > 0 ? (
                 productInventory.map((product, index) => (
                   <tr key={product.id} className="hover:bg-gray-100">
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
@@ -247,6 +247,12 @@ function ProductInventoryTransaction() {
                     </td>
                   </tr>
                 ))
+              ): (
+                <tr>
+                  <td colSpan="11" className="text-center py-4">
+                    No data available
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
