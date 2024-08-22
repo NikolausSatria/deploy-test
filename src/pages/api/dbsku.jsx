@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     } catch (error) {
       res
         .status(500)
-        .json({ message: "Error when trying to fetch data from the database" });
+        .json({ message: "Error when trying to fetch data from the database." });
     }
   } else {
     res.setHeader("Allow", ["GET"]);
