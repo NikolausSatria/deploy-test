@@ -29,7 +29,7 @@ export default async function handler(req, res) {
           UNION ALL
           SELECT material_id AS id, material_description AS description, 'material' AS type FROM material_db
           UNION ALL
-          SELECT material_id AS id, asset_description AS description, 'asset' AS type FROM asset_db
+          SELECT material_id AS id, material_description AS description, 'asset' AS type FROM asset_db
         ) AS combined ON ds.product_id = combined.id
       `;
       let countQuery = `
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
             UNION ALL
             SELECT material_id AS id, material_description AS description, 'material' AS type FROM material_db
             UNION ALL
-            SELECT material_id AS id, asset_description AS description, 'asset' AS type FROM asset_db
+            SELECT material_id AS id, material_description AS description, 'asset' AS type FROM asset_db
           ) AS combined ON ds.product_id = combined.id
           GROUP BY ds.product_id
         ) AS combine
