@@ -75,7 +75,7 @@ export default async function handler(req, res) {
           values: search ? values : [],
         });
 
-        const skuData = await query({
+        const dbsku = await query({
           query: sqlQuery,
           values,
         });
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
         const totalItems = totalCountResult[0]?.total_count || 0;
         const totalPages = Math.ceil(totalItems / limitNum);
 
-        return res.status(200).json({ skuData, totalPages });
+        return res.status(200).json({ dbsku, totalPages });
       } catch (error) {
         console.error("Error fetching data:", error);
         return res.status(500).json({ error: "Internal server error" });
