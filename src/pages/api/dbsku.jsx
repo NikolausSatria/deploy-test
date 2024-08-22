@@ -71,33 +71,28 @@ export default async function handler(req, res) {
       }
 
       sqlQuery += ` LIMIT ? OFFSET ?`;
-      values.push(parseInt(limitNum), parseInt(offset));
+      values.push(limitNum, offset);
 
       console.log("SQL Query:", sqlQuery);
       console.log("Values:", values);
 
-      try {
-        const totalCountResult = await query({
-          query: countQuery,
-          values: search ? [search, search, search, search, search, search] : [],
-        });
+      const totalCountResult = await query({
+        query: countQuery,
+        values: search ? [search, search, search, search, search, search] : [],
+      });
 
-        const dbsku = await query({
-          query: sqlQuery,
-          values,
-        });
+      const dbsku = await query({
+        query: sqlQuery,
+        values,
+      });
 
-        const totalItems = totalCountResult[0].total_count;
-        const totalPages = Math.ceil(totalItems / limitNum);
+      const totalItems = totalCountResult[0].total_count;
+      const totalPages = Math.ceil(totalItems / limitNum);
 
-        return res.status(200).json({
-          dbsku,
-          totalPages
-        });
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        return res.status(500).json({ error: "Internal server error" });
-      }
+      return res.status(200).json({
+        dbsku,
+        totalPages
+      });
     }
 
     return res.status(405).end(`Method ${method} Not Allowed`);
