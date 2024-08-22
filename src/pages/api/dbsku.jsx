@@ -91,7 +91,11 @@ export default async function handler(req, res) {
         const totalPages = Math.ceil(totalItems / limitNum);
 
         return res.status(200).json({
+<<<<<<< HEAD
           dbsku, 
+=======
+          dbsku,
+>>>>>>> 1035c0d2fdbf8a33a05d9d7dfa524f66a2531667
           totalPages
         });
       } catch (error) {
