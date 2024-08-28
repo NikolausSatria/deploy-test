@@ -102,16 +102,13 @@ export default async function handler(req, res) {
         employees_id,
         product_id
       } = body;
-
+    
       // Validate input
       if (!in_out || !date_at || !qty || !employees_id || !product_id) {
         return res.status(400).json({ error: "Missing required fields" });
       }
-
+    
       try {
-        // Start a transaction
-        await query({ query: 'START TRANSACTION' });
-
         // Insert into inventories_db
         const addInventoryResult = await query({
           query: `
@@ -120,11 +117,11 @@ export default async function handler(req, res) {
           `,
           values: [in_out, date_at, lot || null, dn || null, po || null, mo || null, qty],
         });
-
+    
         if (!addInventoryResult.insertId) {
           throw new Error("Failed to insert into inventories_db");
         }
-
+    
         // Insert into database_sku
         const addSkuResult = await query({
           query: `
@@ -133,14 +130,11 @@ export default async function handler(req, res) {
           `,
           values: [addInventoryResult.insertId, product_id, employees_id],
         });
-
+    
         if (!addSkuResult.insertId) {
           throw new Error("Failed to insert into database_sku");
         }
-
-        // Commit the transaction
-        await query({ query: 'COMMIT' });
-
+    
         return res.status(201).json({
           message: "Data successfully added",
           data: {
@@ -149,8 +143,6 @@ export default async function handler(req, res) {
           },
         });
       } catch (error) {
-        // Rollback the transaction in case of error
-        await query({ query: 'ROLLBACK' });
         console.error("Error adding data:", error);
         return res.status(500).json({ error: "Error saving data", details: error.message });
       }
