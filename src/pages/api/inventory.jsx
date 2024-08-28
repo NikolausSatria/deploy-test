@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ inventory, totalPages });
       } catch (error) {
         console.error("Error fetching data:", error);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "Internal server error", details: error.message });
       }
     }
 
@@ -103,67 +103,62 @@ export default async function handler(req, res) {
         product_id
       } = body;
 
-      const existingData = await query({
-        query: `
-          SELECT idt.*, combined.id
-          FROM inventories_db idt
-          INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
-          LEFT JOIN (
-            SELECT product_id AS id FROM product_db
-            UNION ALL
-            SELECT material_id AS id FROM material_db
-            UNION ALL
-            SELECT material_id AS id FROM asset_db
-          ) AS combined ON ds.product_id = combined.id
-          WHERE idt.in_out = ?
-            AND (idt.date_at = ? OR idt.date_at = '0000-00-00')
-            AND (idt.lot = ? OR idt.lot IS NULL)
-            AND (idt.dn = ? OR idt.dn IS NULL)
-            AND (idt.po = ? OR idt.po IS NULL)
-            AND (idt.mo = ? OR idt.mo IS NULL)
-            AND idt.qty = ?
-            AND combined.id = ?
-        `,
-        values: [in_out, date_at, lot, dn, po, mo, qty, product_id],
-      });
+      // Validate input
+      if (!in_out || !date_at || !qty || !employees_id || !product_id) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
 
-      if (existingData && existingData.length > 0) {
-        return res.status(400).json({ message: "Failed to input data into the database" });
-      } else {
-        try {
-          const addData = await query({
-            query: `
-              INSERT INTO inventories_db (in_out, date_at, lot, dn, po, mo, qty)
-              VALUES (?, ?, ?, ?, ?, ?, ?)
-            `,
-            values: [in_out, date_at, lot, dn, po, mo, qty],
-          });
+      try {
+        // Start a transaction
+        await query({ query: 'START TRANSACTION' });
 
-          await query({
-            query: `
-              INSERT INTO database_sku (inventory_db_id, product_id, employees_id)
-              VALUES (?, ?, ?)
-            `,
-            values: [addData.insertId, product_id, employees_id],
-          });
+        // Insert into inventories_db
+        const addInventoryResult = await query({
+          query: `
+            INSERT INTO inventories_db (in_out, date_at, lot, dn, po, mo, qty)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `,
+          values: [in_out, date_at, lot || null, dn || null, po || null, mo || null, qty],
+        });
 
-          return res.status(201).json({
-            message: "Data successfully added",
-            data: {
-              inventory_id: addData.insertId,
-              sku_id: addData.insertId,
-            },
-          });
-        } catch (error) {
-          console.error("Error adding data:", error);
-          return res.status(500).json({ message: "Error saving data" });
+        if (!addInventoryResult.insertId) {
+          throw new Error("Failed to insert into inventories_db");
         }
+
+        // Insert into database_sku
+        const addSkuResult = await query({
+          query: `
+            INSERT INTO database_sku (inventory_db_id, product_id, employees_id)
+            VALUES (?, ?, ?)
+          `,
+          values: [addInventoryResult.insertId, product_id, employees_id],
+        });
+
+        if (!addSkuResult.insertId) {
+          throw new Error("Failed to insert into database_sku");
+        }
+
+        // Commit the transaction
+        await query({ query: 'COMMIT' });
+
+        return res.status(201).json({
+          message: "Data successfully added",
+          data: {
+            inventory_id: addInventoryResult.insertId,
+            sku_id: addSkuResult.insertId,
+          },
+        });
+      } catch (error) {
+        // Rollback the transaction in case of error
+        await query({ query: 'ROLLBACK' });
+        console.error("Error adding data:", error);
+        return res.status(500).json({ error: "Error saving data", details: error.message });
       }
     }
 
-    return res.status(405).end(`Method ${method} Not Allowed`);
+    return res.status(405).json({ error: `Method ${method} Not Allowed` });
   } catch (error) {
     console.error("Error in handler:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error", details: error.message });
   }
 }
