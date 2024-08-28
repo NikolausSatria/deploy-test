@@ -17,40 +17,46 @@ export default async function handler(req, res) {
       const values = [];
       let sqlQuery = `
         SELECT idt.date_at,
-               SUM(CASE WHEN idt.in_out LIKE 'IN%' THEN idt.qty WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty ELSE 0 END) AS qty,
+               SUM(CASE 
+                   WHEN idt.in_out LIKE 'IN%' THEN idt.qty 
+                   WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty 
+                   ELSE 0 
+               END) AS qty,
                idt.in_out,
-               combined.id,
+               combined.product_id,
                combined.description,
                combined.type
         FROM inventories_db idt
         INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
         LEFT JOIN (
-          SELECT product_id AS id, product_description AS description, 'product' AS type FROM product_db
+          SELECT product_id, product_description AS description, 'product' AS type 
+          FROM product_db
           UNION ALL
-          SELECT material_id AS id, material_description AS description, 'material' AS type FROM material_db
+          SELECT material_id, material_description AS description, 'material' AS type 
+          FROM material_db
           UNION ALL
-          SELECT material_id AS id, material_description AS description, 'asset' AS type FROM asset_db
-        ) AS combined ON ds.product_id = combined.id
+          SELECT material_id, material_description AS description, 'asset' AS type 
+          FROM asset_db
+        ) AS combined ON ds.product_id = combined.product_id
       `;
+
       let countQuery = `
-        SELECT COUNT(*) AS total_count
+        SELECT COUNT(DISTINCT combined.product_id) AS total_count
         FROM (
-          SELECT idt.date_at,
-                 SUM(CASE WHEN idt.in_out LIKE 'IN%' THEN idt.qty WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty ELSE 0 END) AS qty,
-                 idt.in_out,
-                 combined.id,
-                 combined.description,
-                 combined.type
+          SELECT combined.product_id
           FROM inventories_db idt
           INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
           LEFT JOIN (
-            SELECT product_id AS id, product_description AS description, 'product' AS type FROM product_db
+            SELECT product_id, product_description AS description, 'product' AS type 
+            FROM product_db
             UNION ALL
-            SELECT material_id AS id, material_description AS description, 'material' AS type FROM material_db
+            SELECT material_id, material_description AS description, 'material' AS type 
+            FROM material_db
             UNION ALL
-            SELECT material_id AS id, material_description AS description, 'asset' AS type FROM asset_db
-          ) AS combined ON ds.product_id = combined.id
-          GROUP BY ds.product_id
+            SELECT material_id, material_description AS description, 'asset' AS type 
+            FROM asset_db
+          ) AS combined ON ds.product_id = combined.product_id
+          GROUP BY combined.product_id
         ) AS combine
       `;
 
@@ -60,7 +66,7 @@ export default async function handler(req, res) {
         values.push(search);
       }
 
-      sqlQuery += ` GROUP BY ds.product_id ORDER BY idt.date_at DESC`;
+      sqlQuery += ` GROUP BY combined.product_id, idt.date_at, idt.in_out ORDER BY idt.date_at DESC`;
       if (allData !== "true") {
         sqlQuery += ` LIMIT ? OFFSET ?`;
         values.push(limitNum, offset);
@@ -103,17 +109,16 @@ export default async function handler(req, res) {
         product_id
       } = body;
     
-      // Validate input
       if (!in_out || !date_at || !qty || !employees_id || !product_id) {
         return res.status(400).json({ error: "Missing required fields" });
       }
     
       try {
-        // Insert into inventories_db
         const addInventoryResult = await query({
           query: `
             INSERT INTO inventories_db (in_out, date_at, lot, dn, po, mo, qty)
             VALUES (?, ?, ?, ?, ?, ?, ?)
+            RETURNING id;
           `,
           values: [in_out, date_at, lot || null, dn || null, po || null, mo || null, qty],
         });
@@ -122,7 +127,6 @@ export default async function handler(req, res) {
           throw new Error("Failed to insert into inventories_db");
         }
     
-        // Insert into database_sku
         const addSkuResult = await query({
           query: `
             INSERT INTO database_sku (inventory_db_id, product_id, employees_id)
