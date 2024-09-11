@@ -19,16 +19,21 @@ export default NextAuth({
         }
 
         try {
+          console.log(`Querying for userId: ${userId}`);
           const users = await query({
             query: "SELECT * FROM employees WHERE id = ?",
             values: [userId],
           });
+
+          console.log(`Users found: ${JSON.stringify(users)}`);
 
           if (users.length === 0) {
             throw new Error("No User Found");
           }
 
           const user = users[0];
+          console.log(`User found: ${JSON.stringify(user)}`);
+
           const match = await bcrypt.compare(password, user.password);
 
           if (!match) {
@@ -51,8 +56,8 @@ export default NextAuth({
   secret: process.env.SECRET,
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60,
-    updateAge: 2 * 60 * 60,
+    maxAge: 8 * 60 * 60, // 8 hours
+    updateAge: 2 * 60 * 60, // 2 hours
   },
   callbacks: {
     async jwt({ token, user }) {
