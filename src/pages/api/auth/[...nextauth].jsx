@@ -15,20 +15,24 @@ export default NextAuth({
         const { userId, password } = credentials;
 
         if (!userId || !password) {
-          throw new Error("User ID and Password are required");
+          throw new Error("User ID and Password are Required");
         }
 
         try {
+          console.log(`Querying for userId: ${userId}`);
           const users = await query({
             query: "SELECT * FROM employees WHERE id = ?",
             values: [userId],
           });
 
+          console.log(`Users found: ${JSON.stringify(users)}`);
+
           if (users.length === 0) {
-            throw new Error("No user found");
+            throw new Error("No User Found");
           }
 
           const user = users[0];
+          console.log(`User found: ${JSON.stringify(user)}`);
 
           const match = await bcrypt.compare(password, user.password);
 
@@ -36,12 +40,11 @@ export default NextAuth({
             throw new Error("Password incorrect");
           }
 
-          // Return user object as per NextAuth.js requirements
           return { id: user.id, name: user.name, position: user.position };
 
         } catch (error) {
-          console.error("Login error:", error.message);
-          throw new Error("Error when trying to login");
+          console.error("Login error:", error);
+          throw new Error("Error when trying to Login");
         }
       },
     }),
@@ -50,18 +53,7 @@ export default NextAuth({
     signIn: '/login',
     error: '/login',
   },
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.SECRET,
   session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 hours
