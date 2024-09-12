@@ -15,36 +15,35 @@ export default NextAuth({
         const { userId, password } = credentials;
 
         if (!userId || !password) {
-          throw new Error("User ID and Password are Required");
+          throw new Error("User ID and Password are required");
         }
 
         try {
-          console.log(`Querying for userId: ${userId}`);
+          // Query user from the database
           const users = await query({
             query: "SELECT * FROM employees WHERE id = ?",
             values: [userId],
           });
 
-          console.log(`Users found: ${JSON.stringify(users)}`);
-
           if (users.length === 0) {
-            throw new Error("No User Found");
+            throw new Error("No user found");
           }
 
           const user = users[0];
-          console.log(`User found: ${JSON.stringify(user)}`);
 
+          // Compare passwords
           const match = await bcrypt.compare(password, user.password);
 
           if (!match) {
             throw new Error("Password incorrect");
           }
 
+          // Return user object if authorized
           return { id: user.id, name: user.name, position: user.position };
 
         } catch (error) {
-          console.error("Login error:", error);
-          throw new Error("Error when trying to Login");
+          console.error("Login error:", error.message);
+          throw new Error("Error when trying to login");
         }
       },
     }),
@@ -53,7 +52,7 @@ export default NextAuth({
     signIn: '/login',
     error: '/login',
   },
-  secret: process.env.SECRET,
+  secret: process.env.NEXTAUTH_SECRET, // Update to NEXTAUTH_SECRET
   session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 hours
