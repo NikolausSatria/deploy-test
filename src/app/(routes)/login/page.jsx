@@ -10,27 +10,57 @@ export default function Home() {
   const router = useRouter();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const loginUser = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      userId,
-      password,
-    });
-
-    if (!result.error) {
-      toast.success("User Login Successfully");
-      router.push("/dashboard");
-    } else {
-      toast.error("Login Failed");
-      console.log(result.error);
-
-      const url = new URL(window.location.href);
-      url.searchParams.delete("error");
-      history.replaceState(null, "", url.href);
+    if (!userId || !password){
+      setError("User ID and Password are Required");
     }
+
+    setIsLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        userId,
+        password,
+      });
+  
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+      } else {
+        toast.success("User Login Successfully");
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
+      toast.error("Login Failed");
+    } finally {
+      setIsLoading(false);
+    }
+
+    // const result = await signIn("credentials", {
+    //   redirect: false,
+    //   userId,
+    //   password,
+    // });
+
+    // if (!result.error) {
+    //   toast.success("User Login Successfully");
+    //   router.push("/dashboard");
+    // } else {
+    //   toast.error("Login Failed");
+    //   console.log(result.error);
+
+    //   const url = new URL(window.location.href);
+    //   url.searchParams.delete("error");
+    //   history.replaceState(null, "", url.href);
+    // }
   };
 
   return (

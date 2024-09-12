@@ -12,16 +12,16 @@ export default NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const { id, password } = credentials;
+        // const { id, password } = credentials;
 
-        if (!id || !password) {
+        if (!credentials?.id|| !credentials?.password) {
           return null;
         }
 
         try {
           const users = await query({
             query: "SELECT * FROM employees WHERE id = ?",
-            values: [id],
+            values: [credentials.id],
           });
 
           if (users.length === 0) {
@@ -29,7 +29,7 @@ export default NextAuth({
           }
 
           const user = users[0];
-          const match = await bcrypt.compare(password, user.password);
+          const match = await bcrypt.compare(credentials.password, user.password);
 
           if (!match) {
             return null;
@@ -44,15 +44,20 @@ export default NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: '/login',
-    error: '/login',
-  },
-  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 hours
-    updateAge: 2 * 60 * 60, // 2 hours
+  },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true
+      }
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -64,11 +69,17 @@ export default NextAuth({
       return token;
     },
     async session({ session, token }) {
-      session.user = session.user || {};
-      if (token.id) session.user.id = token.id;
-      if (token.name) session.user.name = token.name;
-      if (token.position) session.user.position = token.position;
+      if (token){
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.position = token.position;
+      }
       return session;
     },
   },
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 });
