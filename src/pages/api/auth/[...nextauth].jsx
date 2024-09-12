@@ -8,43 +8,38 @@ export default NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        userId: { label: "User ID", type: "text" },
+        id: { label: "User ID", type: "text" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const { userId, password } = credentials;
+        const { id, password } = credentials;
 
-        if (!userId || !password) {
-          throw new Error("User ID and Password are Required");
+        if (!id || !password) {
+          return null;
         }
 
         try {
-          console.log(`Querying for userId: ${userId}`);
           const users = await query({
             query: "SELECT * FROM employees WHERE id = ?",
-            values: [userId],
+            values: [id],
           });
 
-          console.log(`Users found: ${JSON.stringify(users)}`);
-
           if (users.length === 0) {
-            throw new Error("No User Found");
+            return null;
           }
 
           const user = users[0];
-          console.log(`User found: ${JSON.stringify(user)}`);
-
           const match = await bcrypt.compare(password, user.password);
 
           if (!match) {
-            throw new Error("Password incorrect");
+            return null;
           }
 
           return { id: user.id, name: user.name, position: user.position };
 
         } catch (error) {
           console.error("Login error:", error);
-          throw new Error("Error when trying to Login");
+          return null;
         }
       },
     }),
@@ -53,7 +48,7 @@ export default NextAuth({
     signIn: '/login',
     error: '/login',
   },
-  secret: process.env.SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 hours
