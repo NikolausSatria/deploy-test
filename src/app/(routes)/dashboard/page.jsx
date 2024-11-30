@@ -13,10 +13,10 @@ function page() {
   return (
     <RouteLayout>
         {/* the container div */}
-        <div className="flex h-full w-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
           <h1 className='sm:text-lg md:text-2xl lg:text-4xl text font-medium'>Dashboard</h1>
           <div className="justify-center items-center max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-x-scroll">
-            <table className="md:text-base ">
+            <table className="min-w-full ">
               <thead>
                 <tr>
                   <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">No</th>

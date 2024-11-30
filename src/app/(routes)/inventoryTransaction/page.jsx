@@ -6,8 +6,11 @@ import Popup from "./Popup";
 import RouteLayout from "../RouteLayout";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import Link from "next/link";
+import Date from "@/components/Date";
 
-function InventoryTransaction({ item }) {
+
+function InventoryTransaction() {
   const router = useRouter();
 
   const [buttonPopup, setButtonPopup] = useState(false);
@@ -19,12 +22,10 @@ function InventoryTransaction({ item }) {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
-  useEffect(() => {
-    getInventory(searchQuery, currentPage);
-  }, [searchQuery, currentPage]);
 
   async function getInventory(query, page) {
     setIsLoading(true);
+
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_URL}/api/inventory?search=${query}&page=${page}&limit=${itemsPerPage}`,
@@ -42,6 +43,10 @@ function InventoryTransaction({ item }) {
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    getInventory(searchQuery, currentPage);
+  }, [searchQuery, currentPage]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -88,7 +93,7 @@ function InventoryTransaction({ item }) {
     const tableColumns = ["No", "ID", "Description", "Type", "Quantity"];
     const tableRows = data.map((item, index) => [
       index + 1,
-      item.id,
+      item.product_id,
       item.description,
       item.type,
       item.qty.toString(),
@@ -101,8 +106,13 @@ function InventoryTransaction({ item }) {
 
   return (
     <RouteLayout>
-      <div className="flex w-full h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <h1 className="font-medium text-4xl">INVENTORY TRANSACTION</h1>
+      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        <div className="flex justify-center items-center">
+          <h1 className="font-medium text-4xl text-center">
+            INVENTORY TRANSACTION
+          </h1>
+        </div>
+
         <form className="p-7" onSubmit={handleSearch}>
           <label
             htmlFor="default-search"
@@ -149,24 +159,24 @@ function InventoryTransaction({ item }) {
         <div className="flex flex-row-reverse mb-4">
           <nav className="relative z-0 inline-flex shadow-sm">
             <div className="flex justify-center items-center">
-              <a
+              <Link
                 href="/inventoryTransaction/Product_Inventory"
                 className="inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm font-medium text-blue-700 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
               >
                 Product
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/inventoryTransaction/Asset_Inventory"
                 className="inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
               >
                 Asset
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/inventoryTransaction/Material_Inventory"
                 className="inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
               >
                 Material
-              </a>
+              </Link>
             </div>
           </nav>
         </div>
@@ -189,10 +199,14 @@ function InventoryTransaction({ item }) {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-blue-500">Action
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  Date Created
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  Action
                 </th>
               </tr>
             </thead>
@@ -200,39 +214,39 @@ function InventoryTransaction({ item }) {
             <tbody className="bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">Loading...</td>
+                  <td colSpan="6" className="text-center py-4">
+                    Loading...
+                  </td>
                 </tr>
-              ) : Array.isArray(inventory) && inventory.length > 0? (
+              ) : Array.isArray(inventory) && inventory.length > 0 ? (
                 inventory.map((item, index) => (
                   <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-gray-900">
-                        {index + 1}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-gray-900">
-                        {item.id}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {item.product_id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-gray-900">
-                        {item.description}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {item.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-gray-900">
-                        {item.type}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {item.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div className="text-sm leading-5 text-gray-900">
-                        {item.qty}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {item.qty}
                     </td>
-                    <td className="px-4 py-4 whitespace-no-wrap text-center">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      
+                            <Date
+                              dateStr={item.date_at}
+                              dateFormat="dd-MM-yyyy"
+                            />
+                          
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       <button
-                        onClick={() => handleDetails(item.id)}
+                        onClick={() => handleDetails(item.product_id)}
                         className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
                       >
                         Details
@@ -240,7 +254,7 @@ function InventoryTransaction({ item }) {
                     </td>
                   </tr>
                 ))
-              ): (
+              ) : (
                 <tr>
                   <td colSpan="11" className="text-center py-4">
                     No data available
@@ -249,30 +263,35 @@ function InventoryTransaction({ item }) {
               )}
             </tbody>
           </table>
+        </div>
 
-          <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-            >
-              Previous
-            </button>
-            <div className="text-lg">
-              Page {currentPage} of {totalPages}
-            </div>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-            >
-              Next
-            </button>
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            Previous
+          </button>
+          <div className="text-lg">
+            Page {currentPage} of {totalPages}
           </div>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
 
+        <div className="flex justify-start">
           <button
             onClick={downloadCompleteInventory}
-            className="mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold py-2 px-4 rounded"
+            className="px-4 py-2 mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold rounded"
           >
             <BsDownload className="inline mr-2" />
             Download All

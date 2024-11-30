@@ -8,8 +8,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
 
-
-function MaterialInventoryTransaction({item}) {
+function MaterialInventoryTransaction({ item }) {
   const router = useRouter();
 
   const [buttonPopup, setbuttonPopup] = useState(false);
@@ -20,7 +19,13 @@ function MaterialInventoryTransaction({item}) {
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
-  async function getInventory(query, page) {
+  useEffect(() => {
+    if (searchQuery.length === 0 || searchQuery.length > 2) {
+      getInventory(searchQuery, currentPage);
+    }
+  }, [searchQuery, currentPage]);
+
+  const getInventory = async (query, page) => {
     setIsLoading(true);
     try {
       const res = await fetch(
@@ -37,16 +42,13 @@ function MaterialInventoryTransaction({item}) {
         console.error("Invalid data format:", response);
         setMaterialInventory([]);
       }
-      setTotalPages(response.totalPages);
+      setTotalPages(response.totalPages || 0);
     } catch (error) {
       console.error("Failed to load Material Inventory Transaction:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }
-
-  useEffect(() => {
-    getInventory(searchQuery, currentPage);
-  }, [searchQuery, currentPage]);
+  };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -105,8 +107,10 @@ function MaterialInventoryTransaction({item}) {
 
   return (
     <RouteLayout>
-      <div className="flex w-[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <h1 className="font-medium text-4xl">INVENTORY TRANSACTION</h1>
+      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        <div className="flex justify-center items-center">
+          <h1 className="font-medium text-4xl text-center">MATERIAL INVENTORY TRANSACTION</h1>
+        </div>
 
         {/* Search Bar container */}
         <form className="p-7" onSubmit={handleSearch}>
@@ -182,7 +186,7 @@ function MaterialInventoryTransaction({item}) {
         <Popup trigger={buttonPopup} setTrigger={setbuttonPopup}></Popup>
 
         {/* Main Page Container */}
-        <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
             <thead>
               <tr>
@@ -198,10 +202,11 @@ function MaterialInventoryTransaction({item}) {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-blue-500">Action
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  Action
                 </th>
               </tr>
             </thead>
@@ -213,25 +218,26 @@ function MaterialInventoryTransaction({item}) {
                     Loading...
                   </td>
                 </tr>
-              ) : Array.isArray(material_inventory) && material_inventory.length >0 ? (
+              ) : Array.isArray(material_inventory) &&
+                material_inventory.length > 0 ? (
                 material_inventory.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-gray-100">
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
+                  <tr key={item.id}>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-sm text-gray-500 text-center">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.qty}
                     </td>
-                    <td className="px-4 py-4 whitespace-no-wrap text-center">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       <button
                         onClick={() => handleDetails(item.id)}
                         className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
@@ -241,7 +247,7 @@ function MaterialInventoryTransaction({item}) {
                     </td>
                   </tr>
                 ))
-              ): (
+              ) : (
                 <tr>
                   <td colSpan="11" className="text-center py-4">
                     No data available
@@ -250,28 +256,35 @@ function MaterialInventoryTransaction({item}) {
               )}
             </tbody>
           </table>
-          {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Previous
-            </button>
-            <span>Page {currentPage} of {totalPages}</span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Next
-            </button>
-          </div>
+        </div>
 
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            Previous
+          </button>
+          <div className="text-lg">
+            Page {currentPage} of {totalPages}
+          </div>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
+
+        <div className="flex justify-start">
           <button
             onClick={downloadCompleteInventory}
-            className="mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold py-2 px-4 rounded"
+            className="px-4 py-2 mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold rounded"
           >
             <BsDownload className="inline mr-2" />
             Download All

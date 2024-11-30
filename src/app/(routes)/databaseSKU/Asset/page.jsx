@@ -60,7 +60,7 @@ function Page() {
               <BiArrowBack className="cursor-pointer" size={"25px"} />
             </button>
           </Link>
-          <h1 className="font-medium text-3xl">Asset</h1>
+          <h1 className="font-medium text-3xl">ASSET</h1>
           <Link href="/databaseSKU/Asset/AssetForm">
             <button>
               <BsDatabaseAdd size={"30px"} className="cursor-pointer" />
@@ -141,19 +141,19 @@ function Page() {
             {/* Head table */}
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   ID
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Asset Number
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Material Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Material Description
                 </th>
               </tr>
@@ -167,31 +167,25 @@ function Page() {
                 </tr>
               ) : Array.isArray(sku) && sku.length > 0 ? (
                 sku.map((item, index) => (
-                  <tr key={item.material_id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div className="text-sm leading-5 text-gray-800">
-                        {(currentPage - 1) * itemsPerPage + index + 1}
-                      </div>
+                  <tr key={`${item.material_id}-${index}`}>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-center">
-                      <div className="text-sm leading-5 text-gray-800">
-                        #{item.material_id}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      #{item.material_id}
                     </td>
-                    <td className="px-7 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
-                        {item.asset_number}
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {item.asset_number}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-sm leading-5 text-gray-600">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.material_type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-sm leading-5 text-gray-600">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.material_description}
                     </td>
                   </tr>
                 ))
-              ): (
+              ) : (
                 <tr>
                   <td colSpan="11" className="text-center py-4">
                     No data available

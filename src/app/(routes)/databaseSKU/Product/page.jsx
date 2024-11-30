@@ -63,7 +63,7 @@ function DatabaseSku() {
               <BiArrowBack className="cursor-pointer" size={"25px"} />
             </button>
           </Link>
-          <h1 className="font-medium text-3xl">Product</h1>
+          <h1 className="font-medium text-3xl">PRODUCT</h1>
           <Link href="/databaseSKU/Product/ProductForm">
             <button>
               <BsDatabaseAdd size={"30px"} className="cursor-pointer" />
@@ -150,7 +150,7 @@ function DatabaseSku() {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   ID
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Product Description
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
@@ -165,7 +165,7 @@ function DatabaseSku() {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Weight(gr)
                 </th>
-                <th className="px-8 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Color
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
@@ -175,7 +175,7 @@ function DatabaseSku() {
                   Box/Coli
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Qty/Coli
+                  uom
                 </th>
               </tr>
             </thead>
@@ -189,12 +189,12 @@ function DatabaseSku() {
                 </tr>
               ) : Array.isArray(skuProduct) && skuProduct.length > 0 ? (
                 skuProduct.map((item, index) => (
-                  <tr key={item.id}>
+                  <tr key={`${item.id}-${index}`}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {index + 1 + (currentPage - 1) * itemsPerPage}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {item.id}
+                      {item.product_id}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.product_description}

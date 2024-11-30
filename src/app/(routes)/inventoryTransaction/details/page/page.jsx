@@ -13,7 +13,6 @@ import { useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 
 const Details = ({ item }) => {
-
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const router = useRouter();
@@ -21,7 +20,7 @@ const Details = ({ item }) => {
   const [title, setTitle] = useState("");
   const { data: session } = useSession();
 
-  if (!session || !session.user){
+  if (!session || !session.user) {
     router.push("/");
   }
 
@@ -60,7 +59,7 @@ const Details = ({ item }) => {
             // Handle the response from the server
             if (data.message) {
               Swal.fire("Deleted!", "Your record has been deleted.", "success");
-              router.push('/inventoryTransaction')
+              router.push("/inventoryTransaction");
             } else {
               Swal.fire(
                 "Error!",
@@ -89,7 +88,7 @@ const Details = ({ item }) => {
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
@@ -104,16 +103,16 @@ const Details = ({ item }) => {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   UOM
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Date Created
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-center text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Employee
                 </th>
                 <th className="px-6 py-3 border-b-2 border-gray-300"></th>
@@ -125,78 +124,50 @@ const Details = ({ item }) => {
               {inventory.map((item, index) => {
                 return (
                   <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center justify-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800 ">
-                            {index + 1}
-                          </div>
-                        </div>
-                      </div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {index + 1}
                     </td>
                     {/*Date */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm leading-5 text-gray-800">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      
                             <Date
                               dateStr={item.date_at}
                               dateFormat="dd-MM-yyyy"
                             />
-                          </div>
-                        </div>
-                      </div>
+                          
                     </td>
                     {/* Status */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center">
-                        <div className="text-sm leading-5 text-blue-900">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      
                           {item.in_out}
-                        </div>
-                      </div>
+                        
                     </td>
                     {/* ID */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         {item.product_id}
-                      </div>
                     </td>
                     {/* Description */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="text-sm leading-5 text-blue-900">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         {item.description}
-                      </div>
                     </td>
                     {/* Quantity */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
-                      <div className="text-sm leading-5 flex justify-center">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         {item.qty}
-                      </div>
                     </td>
                     {/* UOM */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b text-blue-900 border-gray-500 text-sm leading-5">
-                      <div className="text-sm leading-5 flex justify-center">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         {item.uom}
-                      </div>
                     </td>
                     {/* Created at */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center justify-center">
-                        <div className="text-sm leading-5 text-center text-gray-800">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                           <Date dateStr={item.created_at} dateFormat="PPpp" />
-                        </div>
-                      </div>
                     </td>
                     {/* Employee */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
-                      <div className="flex items-center justify-center">
-                        <div className="text-sm leading-5 text-center text-gray-800">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                           {item.name}
-                        </div>
-                      </div>
                     </td>
                     {/* Icon container */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       <div className="flex items-center justify-between space-x-5">
                         {/* button Edit */}
                         <button

@@ -118,7 +118,7 @@ export default function Page() {
 
   return (
     <RouteLayout>
-      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md ">
+      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         <div className="flex justify-between items-center">
           <Link href={"/databaseSKU/Product"}>
             <button>
@@ -147,10 +147,6 @@ export default function Page() {
             autoComplete="false"
             value={state.productDesc}
             readOnly
-            // onChange={(e) =>
-            //   setState({ ...state, productDesc: e.target.value })
-            // }
-            // required
           />
         </div>
         {/** form input container Product Description*/}
@@ -361,9 +357,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Three options for Data inventory */}
         {/* Submit button */}
-        <Link href={"/Confirmpage"} passHref>
           <button
             type="button"
             className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
@@ -371,7 +365,6 @@ export default function Page() {
           >
             Submit
           </button>
-        </Link>
       </div>
     </RouteLayout>
   );

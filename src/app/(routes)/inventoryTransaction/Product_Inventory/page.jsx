@@ -55,10 +55,9 @@ function ProductInventoryTransaction() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setCurrentPage(1); 
+    setCurrentPage(1);
     getInventory(searchQuery, 1);
   };
-  
 
   const handleDetails = (item) => {
     router.push(`/inventoryTransaction/details/page?id=${item}`);
@@ -112,8 +111,12 @@ function ProductInventoryTransaction() {
 
   return (
     <RouteLayout>
-      <div className="flex w=[75rem] h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <h1 className="font-medium text-4xl">INVENTORY TRANSACTION</h1>
+      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        <div className="flex justify-center items-center">
+          <h1 className="font-medium text-4xl text-center">
+            PRODUCT INVENTORY TRANSACTION
+          </h1>
+        </div>
 
         {/* Search Bar container */}
         <form className="p-7" onSubmit={handleSearch}>
@@ -189,7 +192,7 @@ function ProductInventoryTransaction() {
         <Popup trigger={buttonPopup} setTrigger={setButtonPopup}></Popup>
 
         {/* Main Page Container */}
-        <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
             <thead>
               <tr>
@@ -202,13 +205,14 @@ function ProductInventoryTransaction() {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-7 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-blue-500">Action
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  Action
                 </th>
               </tr>
             </thead>
@@ -220,25 +224,26 @@ function ProductInventoryTransaction() {
                     Loading...
                   </td>
                 </tr>
-              ) : Array.isArray(productInventory) && productInventory.length > 0 ? (
+              ) : Array.isArray(productInventory) &&
+                productInventory.length > 0 ? (
                 productInventory.map((product, index) => (
                   <tr key={product.id} className="hover:bg-gray-100">
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {product.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {product.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {product.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-sm leading-5 text-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {product.qty}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-200 text-center">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       <button
                         onClick={() => handleDetails(product.id)}
                         className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
@@ -248,7 +253,7 @@ function ProductInventoryTransaction() {
                     </td>
                   </tr>
                 ))
-              ): (
+              ) : (
                 <tr>
                   <td colSpan="11" className="text-center py-4">
                     No data available
@@ -257,39 +262,39 @@ function ProductInventoryTransaction() {
               )}
             </tbody>
           </table>
-          {/* Pagination */}
-        <div className="flex justify-between items-center p-4">
+        </div>
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
           >
             Previous
           </button>
-          <span className="text-sm">
+          <div className="text-lg">
             Page {currentPage} of {totalPages}
-          </span>
+          </div>
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
           >
             Next
           </button>
         </div>
 
-        <button
-          onClick={downloadCompleteInventory}
-          className="mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold py-2 px-4 rounded"
-        >
-          <BsDownload className="inline mr-2" />
-          Download All
-        </button>
+        <div className="flex justify-start">
+          <button
+            onClick={downloadCompleteInventory}
+            className="px-4 py-2 mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold rounded"
+          >
+            <BsDownload className="inline mr-2" />
+            Download All
+          </button>
         </div>
-
-        
       </div>
     </RouteLayout>
   );

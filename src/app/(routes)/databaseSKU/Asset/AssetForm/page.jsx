@@ -67,7 +67,7 @@ export default function Page() {
 
   return (
     <RouteLayout>
-      <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         <div className="flex justify-between items-center">
           <Link href="/databaseSKU/Asset">
             <button>
