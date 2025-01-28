@@ -53,9 +53,9 @@ function DatabaseSku() {
 
   return (
     <RouteLayout>
-      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+      <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         {/* Header Button */}
-        <div className="flex justify-between items-center w-full">
+        <div className="flex justify-between items-center">
           <h1 className="font-medium text-3xl flex-1 text-center">
             DATABASE SKU
           </h1>
@@ -133,57 +133,59 @@ function DatabaseSku() {
             </div>
           </nav>
         </div>
-        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
+
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
             {/* Head table */}
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Product Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Material Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   UOM
                 </th>
               </tr>
             </thead>
+
             <tbody className="bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4">
+                  <td colSpan="5" className="text-center py-4">
                     Loading...
                   </td>
                 </tr>
               ) : Array.isArray(dbSku) && dbSku.length > 0 ? (
                 dbSku.map((item, index) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                  <tr key={index}>
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       #{item.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.material_type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.uom}
                     </td>
                   </tr>
@@ -198,7 +200,6 @@ function DatabaseSku() {
             </tbody>
           </table>
         </div>
-
         {/* Pagination */}
         <div className="flex justify-between mt-4">
           <button

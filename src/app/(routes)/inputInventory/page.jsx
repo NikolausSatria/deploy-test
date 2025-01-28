@@ -4,15 +4,15 @@ import RouteLayout from "../RouteLayout";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import AsyncSelect from "react-select/async";
-import makeAnimated from "react-select/animated";
 import { useSession } from "next-auth/react";
+import Swal from "sweetalert2"; // Impor SweetAlert2
 
 function InputInventory() {
   const optionProductDetail = ["IN-INT", "OUT-INT", "IN-EXT", "OUT-EXT"];
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const id = searchParams.get("id"); // ID tidak digunakan untuk update
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [state, setState] = useState({
@@ -80,7 +80,6 @@ function InputInventory() {
   };
 
   const handleSelectChange = (event) => {
-    // setSelectedState(event.target.value)
     const selected = event.target.value;
     setState((prevState) => ({
       ...prevState,
@@ -105,9 +104,10 @@ function InputInventory() {
     if (!validateField(state.in_out, "Transaction Type")) return false;
 
     if (["IN-INT", "IN-EXT", "OUT-INT", "OUT-EXT"].includes(state.in_out)) {
-      if (!validateField(state.lot, "LOT No.")) return false;
+      // if (!validateField(state.lot, "LOT No.")) return false;
 
       if (["IN-INT", "OUT-INT"].includes(state.in_out)) {
+        if (!validateField(state.lot, "LOT No.")) return false;
         if (!validateField(state.mo, "MO No.")) return false;
       }
 
@@ -131,41 +131,52 @@ function InputInventory() {
       return;
     }
 
-    const method = id ? "PUT" : "POST";
-    const url = id
-      ? `${process.env.NEXT_PUBLIC_URL}/api/updateinventory?id=${id}`
-      : `${process.env.NEXT_PUBLIC_URL}/api/inventory`;
+    // Konfirmasi sebelum mengirim data
+    const result = await Swal.fire({
+      title: "Konfirmasi",
+      text: "Apakah Anda yakin ingin mengirim data ini?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, kirim!",
+      cancelButtonText: "Batal",
+    });
 
-    const postData = {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        employees_id: session.user.id,
-        product_id: selectedProduct.value,
-        in_out: state.in_out,
-        date_at: state.date_at,
-        lot: state.lot,
-        dn: state.dn,
-        po: state.po,
-        mo: state.mo,
-        qty: state.qty,
-      }),
-    };
+    if (result.isConfirmed) {
+      const url = `${process.env.NEXT_PUBLIC_URL}/api/inventory_transaction`; // Hanya menggunakan endpoint untuk menambah inventaris
 
-    try {
-      const res = await fetch(url, postData);
-      if (res.ok) {
-        router.push("/inventoryTransaction");
-        toast.success("Data Successfully Input");
-      } else {
-        const errorData = await res.json();
-        toast.error(`Failed Input: ${errorData.message || "Unknown error"}`);
+      const postData = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          employees_id: session.user.id,
+          product_id: selectedProduct.value,
+          in_out: state.in_out,
+          date_at: state.date_at,
+          lot: state.lot,
+          dn: state.dn,
+          po: state.po,
+          mo: state.mo,
+          qty: state.qty,
+        }),
+      };
+
+      try {
+        const res = await fetch(url, postData);
+        if (res.ok) {
+          router.push("/inventoryTransaction");
+          toast.success("Data Successfully Input");
+        } else {
+          const errorData = await res.json();
+          toast.error(`Failed Input: ${errorData.message || "Unknown error"}`);
+        }
+      } catch (error) {
+        console.error("Request failed:", error);
+        toast.error("An error occurred while submitting the data");
       }
-    } catch (error) {
-      console.error("Request failed:", error);
-      toast.error("An error occurred while submitting the data");
     }
   };
 
@@ -208,7 +219,7 @@ function InputInventory() {
           </div>
         </div>
 
-        {/*Quantity Container */}
+        {/* Quantity Container */}
         <div className="flex mb-5 space-x-5">
           <div className="w-1/2">
             <label
@@ -279,7 +290,6 @@ function InputInventory() {
           </div>
         </div>
 
-
         {/* Lot, DN, PO and MO Section */}
 
         {/* Lot No */}
@@ -296,13 +306,16 @@ function InputInventory() {
               autoComplete="off"
               id="lot"
               name="lot"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"
+                  ? "disabled-input"
+                  : "enabled-input"
+              }`}
               placeholder="LOT No."
               value={state.lot}
-              // onChange={(e) => setState({ ...state, lot: e.target.value })}
               onChange={handleChange}
               disabled={state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"}
-              
             />
           </div>
 
@@ -319,14 +332,16 @@ function InputInventory() {
               autoComplete="off"
               id="dn"
               name="dn"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                state.in_out === "IN-INT" || state.in_out === "OUT-INT"
+                  ? "disabled-input"
+                  : "enabled-input"
+              }`}
               placeholder="DN No."
-
-              // onChange={(e) => setState({ ...state, dn: e.target.value })}
               value={state.dn}
               onChange={handleChange}
               disabled={state.in_out === "IN-INT" || state.in_out === "OUT-INT"}
-
             />
           </div>
 
@@ -343,13 +358,16 @@ function InputInventory() {
               autoComplete="off"
               name="po"
               id="po"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                state.in_out === "IN-INT" || state.in_out === "OUT-INT"
+                  ? "disabled-input"
+                  : "enabled-input"
+              }`}
               placeholder="PO No."
               value={state.po}
-              // onChange={(e) => setState({ ...state, po: e.target.value })}
               onChange={handleChange}
               disabled={state.in_out === "IN-INT" || state.in_out === "OUT-INT"}
-
             />
           </div>
           {/* MO No.*/}
@@ -365,27 +383,37 @@ function InputInventory() {
               name="mo"
               id="mo"
               autoComplete="off"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"
+                  ? "disabled-input"
+                  : "enabled-input"
+              }`}
               placeholder="MO No."
               value={state.mo}
-              // onChange={(e) => setState({ ...state, mo: e.target.value })}
               onChange={handleChange}
               disabled={state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"}
-
             />
           </div>
         </div>
         {/* Submit button */}
-        <a href="">
-          <button
-            type="button"
-            className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
-            onClick={handleSubmit}
-          >
-            Submit
-          </button>
-        </a>
+        <button
+          type="button"
+          className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
+          onClick={handleSubmit}
+        >
+          Submit
+        </button>
       </div>
+
+      <style jsx>{`
+        .disabled-input {
+          background-color: #e0e0e0; /* Gray background for disabled fields */
+        }
+        .enabled-input {
+          background-color: #ffffff; /* White background for enabled fields */
+        }
+      `}</style>
     </RouteLayout>
   );
 }

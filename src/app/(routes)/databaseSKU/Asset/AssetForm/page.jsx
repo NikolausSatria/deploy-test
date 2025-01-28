@@ -75,7 +75,7 @@ export default function Page() {
             </button>
           </Link>
           <h1 className="font-medium text-2xl p-5">
-            Input new Data to Asset Database
+            Form Input Asset Database
           </h1>
         </div>
 
@@ -121,7 +121,7 @@ export default function Page() {
           </div>
         </div>
         {/* Date container */}
-        <div className="w-full px-3">
+        {/* <div className="w-full px-3">
           <div className="mb-6">
             <label
               htmlFor="datecontainer"
@@ -136,7 +136,7 @@ export default function Page() {
               className="w-full rounded-md border border-gray-300 text-gray-900 bg-gray-50 py-3 px-6 text-base font-medium outline-none focus:border-[#6A64F1] focus:shadow-md"
             />
           </div>
-        </div>
+        </div> */}
 
         <div className="px-3 flex space-x-5">
           {/* Material Type */}

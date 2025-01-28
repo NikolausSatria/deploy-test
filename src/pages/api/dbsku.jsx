@@ -68,6 +68,7 @@ export default async function handler(req, res) {
       }
 
       sqlQuery += ` ORDER BY id LIMIT ${limitNum} OFFSET ${offset}`;
+      
 
       try {
         const totalCountResult = await query({

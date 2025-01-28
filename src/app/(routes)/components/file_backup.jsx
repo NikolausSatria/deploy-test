@@ -38,7 +38,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
         while (heightLeft > 0) {    
             position = heightLeft - imgHeight;    
             pdf.addPage();    
-            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);    
+            pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);    
             heightLeft -= pageHeight;    
         }    
   
@@ -48,7 +48,9 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
         console.error("Error generating PDF:", error);    
         alert("Failed to generate PDF. Please try again.");    
     }    
-};    
+};  
+
+  
   
   useEffect(() => {
     async function fetchDeliveryData() {
@@ -86,9 +88,9 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
         </button>  
       </div>  
   
-      <>  
+      <div >  
         {deliveryData && deliveryData.length > 0 ? (  
-          <div id="myElementId" className="delivery-notes-container"> 
+          <div id="myElementId" className="delivery-notes-container">  
             {/* Left Container */}  
             <div className="delivery-note">  
               <div className="bg-white rounded px-4 pt-2 pb-2 mb-2 ml-8 flex flex-col mt-4 border-0">  
@@ -166,8 +168,8 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                     </div>  
                   </div>  
                 </div>  
-        
-                <div className="table mt-2 mb-2">  
+  
+                <div className="table mt-2 mb-2"> {/* Mengurangi margin top dan bottom */}  
                   <div className="overflow-x-auto sm:mx-0.5 lg:mx-0.5 border-1">  
                     <div className="overflow-hidden border-black">  
                       <table className="min-w-full border text-center font-[11px] border-black">  
@@ -194,8 +196,8 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                       </table>  
                     </div>  
                   </div>  
-                </div>  
-        
+                </div> 
+  
                 {/* Sign Section */}  
                 <div className="block mt-4">  
                   <div className="flex items-start justify-between">  
@@ -207,7 +209,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                       </p>  
                     </div>  
                   </div>  
-        
+  
                   <div className="flex items-center justify-between">  
                     <div className="w-[150px] ml-2 text-center">  
                       <p className="font-[11px] font-calibri">Received By,</p>  
@@ -219,7 +221,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                       <p className="font-[11px] font-calibri">Warehouse,</p>  
                     </div>  
                   </div>  
-        
+  
                   <div className="flex items-center justify-between mt-4">  
                     <span></span>  
                     <span></span>  
@@ -240,9 +242,9 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
               </div>  
             </div>  
   
-            {/* Right Container */}
+            {/* Right Container */}  
             <div className="delivery-note">  
-            <div className="bg-white rounded px-4 pt-2 pb-2 mb-2 mr-8 flex flex-col mt-4 border-0">  
+              <div className="bg-white rounded px-4 pt-2 pb-2 mb-2 mr-8 flex flex-col mt-4 border-0">  
                 <div className="-mx-3 md:flex mb-4 flex flex-1">  
                   {/* Head letter container */}  
                   <div className="w-1/2 px-2">  
@@ -317,8 +319,8 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                     </div>  
                   </div>  
                 </div>  
-        
-                <div className="table mt-2 mb-2">  
+  
+                <div className="table mt-2 mb-2"> {/* Mengurangi margin top dan bottom */}  
                   <div className="overflow-x-auto sm:mx-0.5 lg:mx-0.5 border-1">  
                     <div className="overflow-hidden border-black">  
                       <table className="min-w-full border text-center font-[11px] border-black">  
@@ -345,8 +347,8 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                       </table>  
                     </div>  
                   </div>  
-                </div>  
-        
+                </div> 
+  
                 {/* Sign Section */}  
                 <div className="block mt-4">  
                   <div className="flex items-start justify-between">  
@@ -358,7 +360,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                       </p>  
                     </div>  
                   </div>  
-        
+  
                   <div className="flex items-center justify-between">  
                     <div className="w-[150px] ml-2 text-center">  
                       <p className="font-[11px] font-calibri">Received By,</p>  
@@ -370,7 +372,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                       <p className="font-[11px] font-calibri">Warehouse,</p>  
                     </div>  
                   </div>  
-        
+  
                   <div className="flex items-center justify-between mt-4">  
                     <span></span>  
                     <span></span>  
@@ -396,7 +398,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
         ) : (  
           <p>Delivery data is loading or not available...</p>  
         )}  
-      </>  
+      </div>  
     </div>  
   );  
 };  

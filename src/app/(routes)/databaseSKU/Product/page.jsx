@@ -26,7 +26,6 @@ function DatabaseSku() {
         }
       );
       const response = await res.json();
-      console.log("API Response:", response); // Tambahkan log ini
       setSkuProduct(
         Array.isArray(response.sku_product) ? response.sku_product : []
       );
@@ -144,37 +143,37 @@ function DatabaseSku() {
             {/*Head table */}
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Product Description
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  Product
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Neck Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Material
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Volume(ml)
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Weight(gr)
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Color
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Bottles/Coli
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Box/Coli
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   uom
                 </th>
               </tr>
@@ -190,37 +189,37 @@ function DatabaseSku() {
               ) : Array.isArray(skuProduct) && skuProduct.length > 0 ? (
                 skuProduct.map((item, index) => (
                   <tr key={`${item.id}-${index}`}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {index + 1 + (currentPage - 1) * itemsPerPage}
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.product_id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.product_description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.neck_type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.material}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.volume}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.weight}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.color}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.bottles_per_coli}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.coli_per_box}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.uom}
                     </td>
                   </tr>
@@ -260,9 +259,11 @@ function DatabaseSku() {
             Next
           </button>
         </div>
-      </div> j
+      </div>
     </RouteLayout>
   );
+
+  
 }
 
 export default DatabaseSku;

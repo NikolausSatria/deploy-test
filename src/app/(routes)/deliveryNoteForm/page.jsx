@@ -1,10 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { BiArrowBack } from "react-icons/bi";
-import { BsDatabaseAdd } from "react-icons/bs";
 import RouteLayout from "../RouteLayout";
-import toast from "react-hot-toast";
 import AsyncSelect from "react-select/async";
 import makeAnimated from "react-select/animated";
 import { components } from "react-select";
@@ -12,10 +8,13 @@ import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { useSession } from "next-auth/react";
 
-function DnSectionPage() {
+function deliveryNoteForm() {
   const router = useRouter();
   const { data: session } = useSession();
   const employee_id = session?.user?.id;
+
+  const [loading, setLoading] = useState(false);
+
   const [state, setState] = useState({
     formList: [{ product_id: 0, qty: "" }],
     date_at: "",
@@ -33,9 +32,6 @@ function DnSectionPage() {
     pic: "",
   });
 
-  console.log(encodeURIComponent(state.dn));
-  console.log(encodeURIComponent(state.so));
-  console.log(encodeURIComponent(state.date_at));
   useEffect(() => {
     if (employee_id) {
       setState((prevState) => ({
@@ -51,10 +47,12 @@ function DnSectionPage() {
   const loadOption = async (inputValue) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/search?search_query=${encodeURIComponent(inputValue)}`
+        `${
+          process.env.NEXT_PUBLIC_URL
+        }/api/search?search_query=${encodeURIComponent(inputValue)}`
       );
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
       const json = await response.json();
       return json.searchs.map((item) => ({
@@ -62,10 +60,9 @@ function DnSectionPage() {
         value: item.id,
       }));
     } catch (error) {
-      console.error('There has been a problem with fetch operation:', error);
+      console.error("There has been a problem with fetch operation:", error);
     }
   };
-  
 
   const addNewProduct = () => {
     setState((prevState) => ({
@@ -89,14 +86,13 @@ function DnSectionPage() {
     newFormList[index] = {
       ...newFormList[index],
       product_id: selectedOption ? selectedOption.value : 0, // Simpan nilai id produk
-      productName: selectedOption ? selectedOption.label : '', // Simpan label produk
+      productName: selectedOption ? selectedOption.label : "", // Simpan label produk
     };
     setState((prevState) => ({
       ...prevState,
       formList: newFormList,
     }));
   };
-  
 
   const handleQuantityChange = (e, index) => {
     const updatedFormList = state.formList.map((item, i) =>
@@ -106,54 +102,72 @@ function DnSectionPage() {
   };
 
   const handleSubmit = async (e) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/inputdn`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(state),
-        }
-      );
+    e.preventDefault();
 
-      const data = await response.json();
-      if (response.ok) {
-        // toast.success("Input Success");
-        Swal.fire({
-          title: "Data Saved",
-          text: "Successfully save Delivery Note.",
-          icon: "success",
-          confirmButtonText: "Download File",
-          showCancelButton: true,
-          cancelButtonText: "Close",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const dn_no = encodeURIComponent(state.dn);
-            const so_no = encodeURIComponent(state.so);
-            const de_date = encodeURIComponent(state.date_at);
-            router.push(
-              `/download?deliveryNoteNo=${dn_no}&soNo=${so_no}&deliveryDate=${de_date}`
-            );
-          } else {
-            router.push(`/inventoryTransaction`);
+    // Tampilkan konfirmasi sebelum mengirim
+    const result = await Swal.fire({
+      title: "Konfirmasi",
+      text: "Apakah Anda yakin ingin mengirim data ini?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, kirim!",
+      cancelButtonText: "Tidak, batalkan",
+    });
+
+    if (result.isConfirmed) {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_URL}/api/inputdn`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(state),
           }
-        });
-      } else {
+        );
+
+        const data = await response.json();
+        console.log("Response data:", data); // Tambahkan log untuk memeriksa respons
+        if (response.ok) {
+          Swal.fire({
+            title: "Data Saved",
+            text: "Successfully save Delivery Note.",
+            icon: "success",
+            confirmButtonText: "Download File",
+            showCancelButton: true,
+            cancelButtonText: "Close",
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const _dn_no = encodeURIComponent(state.dn);
+              const _so_no = encodeURIComponent(state.so);
+              const _date_at = encodeURIComponent(state.date_at);
+              const _customer_id = encodeURIComponent(state.customer_id);
+              router.push(
+                `/download?delivery_note_no=${_dn_no}&so_no=${_so_no}&date_at=${_date_at}&customer_id=${_customer_id}`
+              );
+            } else {
+              router.push(`/inventoryTransaction`);
+            }
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Failed to Save Data: " + data.message, // Tampilkan pesan error dari server
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Failed to Save Data",
+          text: "Error: " + error.message, // Tampilkan pesan error
         });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Error: " + error,
-      });
     }
   };
 
@@ -198,7 +212,7 @@ function DnSectionPage() {
         </div>
 
         {state.formList.map((item, index) => (
-          <div className="px-3" key={index}>
+          <div className="px-3" key={item.id || index}>
             <div className="px-3 mt-5 flex space-x-5">
               <div className="mb-5 w-full">
                 <label
@@ -280,7 +294,7 @@ function DnSectionPage() {
         ))}
 
         <div className="px-3 flex space-x-5  mb-5 mt-5">
-          <span class="w-full p-0.5  bg-blue-600"></span>
+          <span className="w-full p-0.5  bg-blue-600"></span>
         </div>
 
         <div className="px-3 flex space-x-5">
@@ -415,6 +429,28 @@ function DnSectionPage() {
               htmlFor="deliverynumber"
               className="block mb-2 text-sm font-medium text-gray-900"
             >
+              Delivery Note
+            </label>
+            <input
+              type="text"
+              id="customerID"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="Enter Delivery Note"
+              required
+              value={state.delivery_note}
+              onChange={(e) =>
+                setState({ ...state, delivery_note: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <div className="px-3 flex space-x-5">
+          <div className="mb-5 w-full">
+            <label
+              htmlFor="deliverynumber"
+              className="block mb-2 text-sm font-medium text-gray-900"
+            >
               Company Address
             </label>
             <input
@@ -475,12 +511,13 @@ function DnSectionPage() {
           type="button"
           className="text-white h-[40px] mt-3 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2 text-center mr-2 mb- w-full"
           onClick={handleSubmit}
+          disabled={loading}
         >
-          Submit
+          {loading ? "Submitting..." : "Submit"}
         </button>
       </div>
     </RouteLayout>
   );
 }
 
-export default DnSectionPage;
+export default deliveryNoteForm;

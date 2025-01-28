@@ -1,9 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { BsDownload } from "react-icons/bs";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
-import Date from "@/components/Date";
+import FormattedDate from "@/components/FormattedDate";
 import RouteLayout from "@/app/(routes)/RouteLayout";
 import Link from "next/link";
 import { BiArrowBack } from "react-icons/bi";
@@ -18,43 +17,104 @@ const Details = ({ item }) => {
   const router = useRouter();
   const [inventory, setInventory] = useState([]);
   const [title, setTitle] = useState("");
+  const [productId, setProductId] = useState("");
+  const [total_stock, setTotalStock] = useState(0);
   const { data: session } = useSession();
 
-  if (!session || !session.user) {
-    router.push("/");
-  }
-
   useEffect(() => {
-    const getInventory = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      const response = await res.json();
-      setInventory(response.inventory);
-      setTitle(response.inventory[0].description);
-    };
-    getInventory();
-  }, []);
+    // Cek apakah session ada
+    if (!session || !session.user) {
+      router.push("/");
+    }
+  }, [session, router]);
+
+  // useEffect(() => {
+  //   const getInventory = async () => {
+  //     const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+  //     const response = await res.json();
+
+  //     // Cek apakah inventory kosong
+  //     if (response.inventory && response.inventory.length > 0) {
+  //       setInventory(response.inventory);
+  //       setTitle(response.inventory[0].description);
+  //       setProductId(response.inventory[0].product_id);
+  //       setTotalIn(response.inventory[0].total_in);
+  //       setTotalOut(response.inventory[0].total_out);
+  //       setTotalStock(response.inventory[0].total_in - response.inventory[0].total_out);
+  //     } else {
+  //       // Jika tidak ada data, set inventory ke array kosong dan set title ke pesan
+  //       setInventory([]);
+  //       setTitle("Tidak ada data");
+  //       setProductId("");
+  //     }
+  //   };
+  //   getInventory();
+  // }, []);
+
+  useEffect(() => {  
+    const getInventory = async () => {  
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {  
+        method: "GET",  
+        headers: { "Content-Type": "application/json" },  
+      });  
+      const response = await res.json();  
+  
+      // Cek apakah inventory kosong  
+      if (response.inventory && response.inventory.length > 0) {  
+        setInventory(response.inventory);  
+        setTitle(response.inventory[0].description);  
+        setProductId(response.inventory[0].product_id);  
+  
+        // Calculate total stock  
+        let totalIn = 0;  
+        let totalOut = 0;  
+  
+        response.inventory.forEach(item => {  
+          if (item.in_out === "IN-INT") {  
+            totalIn += item.qty;  
+          } else if (item.in_out === "OUT-EXT") {  
+            totalOut += item.qty;  
+          }  
+        });  
+  
+        setTotalStock(totalIn - totalOut);  
+      } else {  
+        // Jika tidak ada data, set inventory ke array kosong dan set title ke pesan  
+        setInventory([]);  
+        setTitle("Tidak ada data");  
+        setProductId("");  
+        setTotalStock(0);  
+      }  
+    };  
+    getInventory();  
+  }, []);  
 
   const handleUpdate = (item) => {
-    router.push(`/inputInventory?id=${item}`);
+    router.push(`/editInventory?id=${item}`);
   };
 
   const handleDelete = async (id, item) => {
     Swal.fire({
       title: "DELETE",
-      text: `Are you sure want to delete ${item}?`,
+      text: `Are you sure you want to delete ${item}?`,
       confirmButtonText: "Delete",
       confirmButtonColor: "#d33",
       showCancelButton: true,
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`/api/updateinventory?id=${id}`, {
+        fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
           method: "DELETE",
         })
-          .then((response) => response.json())
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
           .then((data) => {
             // Handle the response from the server
             if (data.message) {
@@ -67,6 +127,14 @@ const Details = ({ item }) => {
                 "error"
               );
             }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire(
+              "Error!",
+              "There was a problem deleting your record.",
+              "error"
+            );
           });
       }
     });
@@ -81,142 +149,121 @@ const Details = ({ item }) => {
               <BiArrowBack className="cursor-pointer" size={"25px"} />
             </button>
           </Link>
-          <h1 className="font-medium text-2xl">{title.split(";")[0]}</h1>
+          {/* <h1 className="font-medium text-2xl">{title.split(";")[0]}</h1> */}
+          <div className="flex flex-col mb-4">
+            <h1 className="font-medium text-2xl">{title.split(";")[0]}</h1>
+            <span className="text-sm text-gray-500">ID: {productId}</span> 
+            <span className="font-medium text-xl">Total Qty: {total_stock}</span>
+          </div>
         </div>
 
-        <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  ID
-                </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Quantity
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                  Qty
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  UOM
-                </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Date Created
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Employee
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
-                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
+                <th className="px-2 py-3 border-b-2 border-gray-300"></th>
+                <th className="px-2 py-3 border-b-2 border-gray-300"></th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {/* Number */}
-              {inventory.map((item, index) => {
-                return (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {index + 1}
-                    </td>
-                    {/*Date */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      
-                            <Date
-                              dateStr={item.date_at}
-                              dateFormat="dd-MM-yyyy"
-                            />
-                          
-                    </td>
-                    {/* Status */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      
-                          {item.in_out}
-                        
-                    </td>
-                    {/* ID */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {item.product_id}
-                    </td>
-                    {/* Description */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+              {/* Cek apakah inventory kosong */}
+              {inventory.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="px-4 py-4 text-center text-gray-500"
+                  >
+                    Tidak ada data
+                  </td>
+                </tr>
+              ) : (
+                inventory.map((item, index) => {
+                  return (
+                    <tr key={index}>
+                      <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                        {index + 1}
+                      </td>
+                      {/* Date */}
+                      <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                        <FormattedDate dateStr={item.date_at} dateFormat="dd-MM-yyyy" />
+                      </td>
+                      {/* Status */}
+                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                        {item.in_out}
+                      </td>
+                      {/* Description */}
+                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         {item.description}
-                    </td>
-                    {/* Quantity */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      </td>
+                      {/* Quantity */}
+                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         {item.qty}
-                    </td>
-                    {/* UOM */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {item.uom}
-                    </td>
-                    {/* Created at */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                          <Date dateStr={item.created_at} dateFormat="PPpp" />
-                    </td>
-                    {/* Employee */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                          {item.name}
-                    </td>
-                    {/* Icon container */}
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      <div className="flex items-center justify-between space-x-5">
-                        {/* button Edit */}
-                        <button
-                          className="p-1 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
-                          onClick={() => handleUpdate(item.id)}
-                        >
-                          <FaRegEdit size={"25px"} />
-                        </button>
+                      </td>
+                      {/* Created at */}
+                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                        <FormattedDate dateStr={item.created_at} dateFormat="PPpp" />
+                      </td>
+                      {/* Employee */}
+                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                        {item.employee_name}
+                      </td>
 
-                        {/* button Delete */}
+                      {/* Icon container */}
+                      <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                        <div className="flex items-center space-x-2">
 
-                        {session.user.position !== "user" && (
+                          {/* button Edit */}
                           <button
-                            className="p-1 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
-                            onClick={() =>
-                              handleDelete(item.id, [item.product_id])
-                            }
+                            className="p-1 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
+                            onClick={() => handleUpdate(item.id)}
                           >
-                            <MdDeleteForever size={"25px"} />
+                            <FaRegEdit size={"25px"} />
                           </button>
-                        )}
 
-                        {/* <button
-                          className="p-1 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
-                          onClick={() =>
-                            handleDelete(item.id, [item.product_id])
-                          }
-                        >
-                          <MdDeleteForever size={"25px"} />
-                        </button> */}
-                      </div>
-                    </td>
-                    <th className="px-6 py-3 border-b-2 border-gray-300"></th>
-                  </tr>
-                );
-              })}
+                          {/* button Delete */}
+                          {session.user.position !== "user" && (
+                            <button
+                              className="p-1 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
+                              onClick={() =>
+                                handleDelete(item.id, [item.product_id])
+                              }
+                            >
+                              <MdDeleteForever size={"25px"} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <th className="px-4 py-3 border-b-2 border-gray-300"></th>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
           {/* Footer Information */}
           <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
-            <div>
-              {/* <button
-                  type="button"
-                  className="text-white bg-blue-700 h-[66px] w-[355px] flex items-center justify-around  hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                >
-                  <BsDownload size={"25px"} />
-                  Download Letter of Shipping
-                </button> */}
-            </div>
+            <div></div>
           </div>
         </div>
       </div>

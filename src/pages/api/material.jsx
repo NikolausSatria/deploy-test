@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       try {
         const totalCountResult = await query({
           query: countQuery,
-          values: search ? [search, search] : [],
+          values: search ? values : [],
         });
 
         const materials = await query({

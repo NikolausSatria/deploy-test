@@ -2,33 +2,36 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BsDownload } from "react-icons/bs";
-import Popup from "./Popup";
 import RouteLayout from "../RouteLayout";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Link from "next/link";
-import Date from "@/components/Date";
-
+import FormattedDate from "@/components/FormattedDate";
 
 function InventoryTransaction() {
   const router = useRouter();
 
-  const [buttonPopup, setButtonPopup] = useState(false);
   const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
 
+  useEffect(() => {  
+    getInventory(searchQuery, currentPage);  
+  }, [searchQuery, currentPage, startDate, endDate]);  
+
   async function getInventory(query, page) {
     setIsLoading(true);
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/inventory?search=${query}&page=${page}&limit=${itemsPerPage}`,
+        `${process.env.NEXT_PUBLIC_URL}/api/inventory_transaction?search=${query}&page=${page}&limit=${itemsPerPage}&startDate=${startDate}&endDate=${endDate}`, // Menambahkan startDate dan endDate ke query
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -44,9 +47,14 @@ function InventoryTransaction() {
     }
   }
 
-  useEffect(() => {
-    getInventory(searchQuery, currentPage);
-  }, [searchQuery, currentPage]);
+  const handleStartDateChange = (e) => {
+    setStartDate(e.target.value);
+  };
+
+  const handleEndDateChange = (e) => {
+    setEndDate(e.target.value);
+
+  };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -66,7 +74,7 @@ function InventoryTransaction() {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/inventory?allData=true`,
+        `${process.env.NEXT_PUBLIC_URL}/api/inventory_transaction?search=${query}&page=${page}&limit=${itemsPerPage}&startDate=${startDate || ''}&endDate=${endDate || ''}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -100,15 +108,40 @@ function InventoryTransaction() {
     ]);
 
     doc.text("Inventory Transaction Report", 14, 15);
-    autoTable(doc, { startY: 20, head: [tableColumns], body: tableRows });
-    doc.save("inventory_transaction_report.pdf");
+    autoTable(doc, {
+      startY: 20,
+      head: [tableColumns],
+      body: tableRows,
+      theme: "plain", // Menggunakan tema 'plain' untuk tabel tanpa warna
+      styles: {
+        font: "helvetica",
+        fontSize: 10,
+        cellPadding: 2,
+        overflow: "linebreak",
+        lineColor: [0, 0, 0], // Warna garis hitam
+        lineWidth: 0.1, // Ketebalan garis
+      },
+      headStyles: {
+        fillColor: [255, 255, 255], // Warna latar belakang header putih
+        textColor: [0, 0, 0], // Warna teks hitam
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240], // Warna latar belakang baris genap
+      },
+    });
+    // Mendapatkan timestamp
+    const timestamp = new Date().toISOString().split("T")[0]; // Format YYYY-MM-DD
+    const fileName = `inventory_transaction_report_${timestamp}.pdf`;
+
+    doc.save(fileName);
   }
 
   return (
     <RouteLayout>
-      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <div className="flex justify-center items-center">
-          <h1 className="font-medium text-4xl text-center">
+      <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        {/* Header Button */}
+        <div className="flex justify-between items-center">
+          <h1 className="font-medium text-3xl flex-1 text-center">
             INVENTORY TRANSACTION
           </h1>
         </div>
@@ -154,9 +187,30 @@ function InventoryTransaction() {
               Search
             </button>
           </div>
+
+          {/* Date Range Filter */}
+          <div className="flex items-center space-x-2 mt-4">
+            <span className="font-medium">From:</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={handleStartDateChange}
+              className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Start Date"
+            />
+            <span className="font-medium">To:</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={handleEndDateChange}
+              className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="End Date"
+            />
+          </div>
         </form>
 
-        <div className="flex flex-row-reverse mb-4">
+        {/* Categories Menubar */}
+        <div className="flex flex-row-reverse">
           <nav className="relative z-0 inline-flex shadow-sm">
             <div className="flex justify-center items-center">
               <Link
@@ -181,31 +235,29 @@ function InventoryTransaction() {
           </nav>
         </div>
 
-        <Popup trigger={buttonPopup} setTrigger={setButtonPopup}></Popup>
-
-        <div className="justify-center items-center min-w-[800px] max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto">
+        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Date Created
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Action
                 </th>
               </tr>
@@ -214,37 +266,35 @@ function InventoryTransaction() {
             <tbody className="bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">
+                  <td colSpan="5" className="text-center py-4">
                     Loading...
                   </td>
                 </tr>
               ) : Array.isArray(inventory) && inventory.length > 0 ? (
                 inventory.map((item, index) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {index + 1}
+                  <tr key={index}>
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.product_id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.qty}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      
-                            <Date
-                              dateStr={item.date_at}
-                              dateFormat="dd-MM-yyyy"
-                            />
-                          
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                      <FormattedDate
+                        dateStr={item.created_at}
+                        dateFormat="dd-MM-yyyy"
+                      />
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       <button
                         onClick={() => handleDetails(item.product_id)}
                         className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
@@ -264,25 +314,24 @@ function InventoryTransaction() {
             </tbody>
           </table>
         </div>
-
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between mt-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
           >
             Previous
           </button>
-          <div className="text-lg">
+          <span>
             Page {currentPage} of {totalPages}
-          </div>
+          </span>
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
           >
             Next
           </button>

@@ -33,13 +33,10 @@ export default async function handler(req, res) {
 
       sqlQuery += ` ORDER BY material_id LIMIT ${limitNum} OFFSET ${offset}`;
 
-      console.log("SQL Query:", sqlQuery);
-      console.log("Values:", values);
-
       try {
         const totalCountResult = await query({
           query: countQuery,
-          values: search ? [search, search] : [],
+          values: search ? values : [],
         });
 
         const assets = await query({

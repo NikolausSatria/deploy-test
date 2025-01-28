@@ -7,9 +7,9 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  const { delivery_note_no, so_no, delivery_date, in_out } = req.query;
+  const { delivery_note_no, so_no, date_at, customer_id, in_out } = req.query;
 
-  if (!delivery_note_no || !so_no || !delivery_date || !in_out) {
+  if (!delivery_note_no || !so_no || !date_at || !customer_id || !in_out) {
     return res.status(400).json({ error: 'Missing required query parameters' });
   }
 
@@ -51,11 +51,12 @@ export default async function handler(req, res) {
             SELECT material_id AS id, material_description AS description, 'asset' AS type FROM asset_db
           ) AS combined ON dn.product_id = combined.id
           WHERE dn.delivery_note_no = ? 
-            AND dn.so_no = ? 
-            AND dn.delivery_date = ? 
+            AND dn.so_no = ?
+            AND idt.date_at = ?
+            AND dn.customer_id = ?
             AND idt.in_out = ?
         `,
-        values: [delivery_note_no, so_no, delivery_date, in_out],
+        values: [delivery_note_no, so_no, date_at, customer_id, in_out],
       });
       res.status(200).json({ deliveryData });
     } else {

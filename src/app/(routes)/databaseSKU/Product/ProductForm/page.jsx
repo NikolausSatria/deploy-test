@@ -21,27 +21,28 @@ export default function Page() {
     color: "",
     bottles_per_coli: "",
     coli_per_box: "",
-    uom: ""
+    uom: "",
   });
 
   const router = useRouter();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    Swal.fire({
+    const result = await Swal.fire({
       title: "Are you sure?",
-      text: "input data to database",
+      text: "Input data to database",
       confirmButtonText: "Yes",
       showCancelButton: true,
       cancelButtonText: "Close",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        AddSku();
-        toast.success("Input Successfully")
-        router.push('/databaseSKU/Product')
-      } else {
-      }
     });
+
+    if (result.isConfirmed) {
+      await AddSku();
+      toast.success("Input Successfully");
+      router.push("/databaseSKU/Product");
+    }
   };
+
   async function AddSku() {
     const postData = {
       method: "POST",
@@ -50,7 +51,7 @@ export default function Page() {
       },
       body: JSON.stringify({
         product_id: state.productId,
-        product_description: state.productDesc,
+        product_description: productName,
         neck_type: state.neckType,
         volume: state.volume,
         material: state.material,
@@ -70,7 +71,7 @@ export default function Page() {
       if (res.ok) {
         setCreated(true);
       } else {
-        console.error("Server responded with non-200 code:", response);
+        console.error("Server responded with non-200 code:", res);
       }
     } catch (error) {
       console.error("Network error:", error);
@@ -91,21 +92,21 @@ export default function Page() {
     ];
 
     const description = descriptionParts
-      .filter(part => part) // Hanya ambil parts yang memiliki nilai
-      .join('; '); // Gabungkan dengan '; ' sebagai pemisah
+      .filter((part) => part) // Hanya ambil parts yang memiliki nilai
+      .join("; "); // Gabungkan dengan '; ' sebagai pemisah
 
-    setState(prevState => ({
+    setState((prevState) => ({
       ...prevState,
-      productDesc: description
+      productDesc: description,
     }));
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'productName') {
+    if (name === "productName") {
       setProductName(value);
     } else {
-      setState(prevState => ({
+      setState((prevState) => ({
         ...prevState,
         [name]: value,
       }));
@@ -114,7 +115,17 @@ export default function Page() {
 
   useEffect(() => {
     updateProductDescription();
-  }, [productName, state.neckType, state.volume, state.material, state.weight, state.color, state.bottles_per_coli, state.coli_per_box, state.uom]);
+  }, [
+    productName,
+    state.neckType,
+    state.volume,
+    state.material,
+    state.weight,
+    state.color,
+    state.bottles_per_coli,
+    state.coli_per_box,
+    state.uom,
+  ]);
 
   return (
     <RouteLayout>
@@ -126,7 +137,7 @@ export default function Page() {
             </button>
           </Link>
           <h1 className="font-medium text-2xl p-5">
-            Input New Data to Product Database
+            Form Input Product Database
           </h1>
         </div>
 
@@ -185,7 +196,7 @@ export default function Page() {
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Product ID"
               value={state.productId}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -208,7 +219,7 @@ export default function Page() {
               placeholder="Neck Type"
               value={state.neckType}
               // onChange={(e) => setState({ ...state, neckType: e.target.value })}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -228,7 +239,7 @@ export default function Page() {
               placeholder="Volume (ml)"
               value={state.volume}
               // onChange={(e) => setState({ ...state, volume: e.target.value })}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -248,7 +259,7 @@ export default function Page() {
               placeholder="Uom"
               value={state.uom}
               // onChange={(e) => setState({ ...state, volume: e.target.value })}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -270,7 +281,7 @@ export default function Page() {
               placeholder="Material"
               value={state.material}
               // onChange={(e) => setState({ ...state, material: e.target.value })}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -290,7 +301,7 @@ export default function Page() {
               placeholder="Weight (gr)"
               value={state.weight}
               // onChange={(e) => setState({ ...state, weight: e.target.value })}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -310,7 +321,7 @@ export default function Page() {
               placeholder="Color"
               value={state.color}
               // onChange={(e) => setState({ ...state, color: e.target.value })}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
               required
             />
           </div>
@@ -334,7 +345,7 @@ export default function Page() {
               // onChange={(e) =>
               //   setState({ ...state, bottles_per_coli: e.target.value })
               // }
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
             />
           </div>
           {/* #Box/Coli*/}
@@ -352,19 +363,19 @@ export default function Page() {
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Box/Coli"
               value={state.coli_per_box}
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
             />
           </div>
         </div>
 
         {/* Submit button */}
-          <button
-            type="button"
-            className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
-            onClick={handleSubmit}
-          >
-            Submit
-          </button>
+        <button
+          type="button"
+          className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
+          onClick={handleSubmit}
+        >
+          Submit
+        </button>
       </div>
     </RouteLayout>
   );

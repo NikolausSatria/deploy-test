@@ -72,13 +72,13 @@ export default function MaterialForm() {
     <RouteLayout>
       <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         <div className="flex justify-between items-center">
-          <Link href={"/databaseSKU/Asset"}>
+          <Link href={"/databaseSKU/Material"}>
             <button>
               <BiArrowBack className="cursor-pointer" size={"25px"} />
             </button>
           </Link>
           <h1 className="font-medium text-3xl p-5">
-            Input new Data to Material Database
+            Form Input Material Database
           </h1>
         </div>
 

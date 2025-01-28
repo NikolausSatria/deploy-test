@@ -28,15 +28,12 @@ export default async function handler(req, res) {
         values.push(search, search);
       }
 
-      sqlQuery += ` ORDER BY product_id LIMIT ${limitNum} OFFSET ${offset}`; // Inline limit and offset
-
-      console.log("SQL Query:", sqlQuery);
-      console.log("Values:", values);
+      sqlQuery += ` ORDER BY product_id LIMIT ${limitNum} OFFSET ${offset}`;
 
       try {
         const totalCountResult = await query({
           query: countQuery,
-          values: search ? [search, search] : [],
+          values: search ? values : [],
         });
 
         const sku_product = await query({

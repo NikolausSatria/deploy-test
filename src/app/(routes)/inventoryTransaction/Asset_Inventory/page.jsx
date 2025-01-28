@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { BsDownload } from "react-icons/bs";
 import Link from "next/link";
-import Popup from "../Popup";
+import { BiArrowBack } from "react-icons/bi";
 import RouteLayout from "../../RouteLayout";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -10,8 +10,6 @@ import { useRouter } from "next/navigation";
 
 function AssetInventoryTransaction({ item }) {
   const router = useRouter();
-
-  const [buttonPopup, setButtonPopup] = useState(false);
   const [assetInventory, setAssetInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -108,9 +106,17 @@ function AssetInventoryTransaction({ item }) {
 
   return (
     <RouteLayout>
-      <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <div className="flex justify-center items-center">
-          <h1 className="font-medium text-4xl text-center">ASSET INVENTORY TRANSACTION</h1>
+      <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
+        {/* Header Button */}
+        <div className="flex justify-between items-center">
+          <Link href="/inventoryTransaction">
+            <button>
+              <BiArrowBack className="cursor-pointer" size={"25px"} />
+            </button>
+          </Link>
+          <h1 className="font-medium text-3xl flex-1 text-center">
+            ASSET INVENTORY TRANSACTION
+          </h1>
         </div>
 
         {/* Search Bar container */}
@@ -183,30 +189,27 @@ function AssetInventoryTransaction({ item }) {
           </nav>
         </div>
 
-        {/* the pop Up download menu */}
-        <Popup trigger={buttonPopup} setTrigger={setButtonPopup}></Popup>
-
         {/* Main Page Container */}
         <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   No
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Description
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Quantity
                 </th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
+                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
                   Action
                 </th>
               </tr>
@@ -215,29 +218,29 @@ function AssetInventoryTransaction({ item }) {
             <tbody className="bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan="11" className="text-center py-4">
+                  <td colSpan="5" className="text-center py-4">
                     Loading...
                   </td>
                 </tr>
               ) : Array.isArray(assetInventory) && assetInventory.length > 0 ? (
                 assetInventory.map((item, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {index + 1}
+                  <tr key={item.id || index}>
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.description}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.type}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       {item.qty}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                       <button
                         onClick={() => handleDetails(item.id)}
                         className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
@@ -259,23 +262,23 @@ function AssetInventoryTransaction({ item }) {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between mt-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
           >
             Previous
           </button>
-          <div className="text-lg">
+          <span>
             Page {currentPage} of {totalPages}
-          </div>
+          </span>
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
           >
             Next
           </button>

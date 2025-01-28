@@ -1,28 +1,27 @@
-.delivery-notes-container {
-    display: flex;
-    justify-content: space-between;
-  }
+.delivery-notes-container {  
+  display: flex;  
+  justify-content: space-between;  
+}  
   
-  .delivery-note {
-    /* flex-basis: 50%;  */
-  }
-
-  .delivery-note-details {
-    display: grid;
-    grid-template-columns: auto auto; /* Mengatur kolom untuk key dan value */
-  }
+.delivery-note {  
+  flex-basis: 50%; /* Mengatur lebar setiap catatan pengiriman */  
+}  
   
-  .detail-row {
-    display: contents; /* Mengizinkan anak-anak dari .detail-row untuk menjadi bagian dari grid */
-  }
+.delivery-note-details {  
+  display: grid;  
+  grid-template-columns: auto auto; /* Mengatur kolom untuk key dan value */  
+}  
   
-  .detail-key {
-    text-align: right;
-    white-space: nowrap; /* Mencegah teks dari wrapping */
-  }
+.detail-row {  
+  display: contents; /* Mengizinkan anak-anak dari .detail-row untuk menjadi bagian dari grid */  
+}  
   
-  .detail-value {
-    text-align: left;
-    /* Gaya tambahan jika diperlukan */
-    margin-left: 5px;
-  }
+.detail-key {  
+  text-align: right;  
+  white-space: nowrap; /* Mencegah teks dari wrapping */  
+}  
+  
+.detail-value {  
+  text-align: left;  
+  margin-left: 5px; /* Gaya tambahan jika diperlukan */  
+}  
