@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import FormattedDate from "@/components/FormattedDate";
@@ -11,14 +11,16 @@ import { MdDeleteForever } from "react-icons/md";
 import { useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 
-const Details = ({ item }) => {
+const Details = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const router = useRouter();
   const [inventory, setInventory] = useState([]);
   const [title, setTitle] = useState("");
   const [productId, setProductId] = useState("");
-  const [total_stock, setTotalStock] = useState(0);
+  const [totalStock, setTotalStock] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -28,69 +30,55 @@ const Details = ({ item }) => {
     }
   }, [session, router]);
 
-  // useEffect(() => {
-  //   const getInventory = async () => {
-  //     const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
-  //       method: "GET",
-  //       headers: { "Content-Type": "application/json" },
-  //     });
-  //     const response = await res.json();
+  useEffect(() => {
+    const getInventory = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
 
-  //     // Cek apakah inventory kosong
-  //     if (response.inventory && response.inventory.length > 0) {
-  //       setInventory(response.inventory);
-  //       setTitle(response.inventory[0].description);
-  //       setProductId(response.inventory[0].product_id);
-  //       setTotalIn(response.inventory[0].total_in);
-  //       setTotalOut(response.inventory[0].total_out);
-  //       setTotalStock(response.inventory[0].total_in - response.inventory[0].total_out);
-  //     } else {
-  //       // Jika tidak ada data, set inventory ke array kosong dan set title ke pesan
-  //       setInventory([]);
-  //       setTitle("Tidak ada data");
-  //       setProductId("");
-  //     }
-  //   };
-  //   getInventory();
-  // }, []);
+        if (!res.ok) {
+          throw new Error("Network response was not ok");
+        }
 
-  useEffect(() => {  
-    const getInventory = async () => {  
-      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {  
-        method: "GET",  
-        headers: { "Content-Type": "application/json" },  
-      });  
-      const response = await res.json();  
-  
-      // Cek apakah inventory kosong  
-      if (response.inventory && response.inventory.length > 0) {  
-        setInventory(response.inventory);  
-        setTitle(response.inventory[0].description);  
-        setProductId(response.inventory[0].product_id);  
-  
-        // Calculate total stock  
-        let totalIn = 0;  
-        let totalOut = 0;  
-  
-        response.inventory.forEach(item => {  
-          if (item.in_out === "IN-INT") {  
-            totalIn += item.qty;  
-          } else if (item.in_out === "OUT-EXT") {  
-            totalOut += item.qty;  
-          }  
-        });  
-  
-        setTotalStock(totalIn - totalOut);  
-      } else {  
-        // Jika tidak ada data, set inventory ke array kosong dan set title ke pesan  
-        setInventory([]);  
-        setTitle("Tidak ada data");  
-        setProductId("");  
-        setTotalStock(0);  
-      }  
-    };  
-    getInventory();  
-  }, []);  
+        const response = await res.json();
+
+        // Cek apakah inventory kosong
+        if (response.inventory && response.inventory.length > 0) {
+          setInventory(response.inventory);
+          setTitle(response.inventory[0].description);
+          setProductId(response.inventory[0].product_id);
+
+          // Calculate total stock
+          let totalIn = 0;
+          let totalOut = 0;
+
+          response.inventory.forEach(item => {
+            if (item.in_out === "IN-INT") {
+              totalIn += item.qty;
+            } else if (item.in_out === "OUT-EXT") {
+              totalOut += item.qty;
+            }
+          });
+
+          setTotalStock(totalIn - totalOut);
+        } else {
+          // Jika tidak ada data, set inventory ke array kosong dan set title ke pesan
+          setInventory([]);
+          setTitle("Tidak ada data");
+          setProductId("");
+          setTotalStock(0);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInventory();
+  }, [id]);
 
   const handleUpdate = (item) => {
     router.push(`/editInventory?id=${item}`);
@@ -140,6 +128,30 @@ const Details = ({ item }) => {
     });
   };
 
+  if (loading) {
+    return (
+      <RouteLayout>
+        <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md items-center justify-center">
+          <div className="text-center">
+            <p className="text-2xl font-medium">Loading...</p>
+          </div>
+        </div>
+      </RouteLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <RouteLayout>
+        <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md items-center justify-center">
+          <div className="text-center">
+            <p className="text-2xl font-medium text-red-500">Error: {error}</p>
+          </div>
+        </div>
+      </RouteLayout>
+    );
+  }
+
   return (
     <RouteLayout>
       <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
@@ -149,11 +161,10 @@ const Details = ({ item }) => {
               <BiArrowBack className="cursor-pointer" size={"25px"} />
             </button>
           </Link>
-          {/* <h1 className="font-medium text-2xl">{title.split(";")[0]}</h1> */}
           <div className="flex flex-col mb-4">
             <h1 className="font-medium text-2xl">{title.split(";")[0]}</h1>
-            <span className="text-sm text-gray-500">ID: {productId}</span> 
-            <span className="font-medium text-xl">Total Qty: {total_stock}</span>
+            <span className="text-sm text-gray-500">ID: {productId}</span>
+            <span className="font-medium text-xl">Total Qty: {totalStock}</span>
           </div>
         </div>
 
@@ -232,7 +243,6 @@ const Details = ({ item }) => {
                       {/* Icon container */}
                       <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
                         <div className="flex items-center space-x-2">
-
                           {/* button Edit */}
                           <button
                             className="p-1 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
@@ -246,7 +256,7 @@ const Details = ({ item }) => {
                             <button
                               className="p-1 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
                               onClick={() =>
-                                handleDelete(item.id, [item.product_id])
+                                handleDelete(item.id, item.product_id)
                               }
                             >
                               <MdDeleteForever size={"25px"} />
@@ -270,4 +280,13 @@ const Details = ({ item }) => {
     </RouteLayout>
   );
 };
-export default Details;
+
+const DetailsWithSuspense = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Details />
+    </Suspense>
+  );
+};
+
+export default DetailsWithSuspense;

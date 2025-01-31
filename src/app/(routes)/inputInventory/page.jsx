@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import RouteLayout from "../RouteLayout";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -12,7 +12,7 @@ function InputInventory() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // ID tidak digunakan untuk update
+  const id = searchParams.get("id"); // Ambil ID dari URL
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [state, setState] = useState({
@@ -27,36 +27,42 @@ function InputInventory() {
 
   useEffect(() => {
     if (id) {
-      fetch(`/api/updateInventory?id=${id}`)
+      fetch(`/api/edit_inventory?id=${id}`) // Menggunakan API baru
         .then((res) => res.json())
         .then((data) => {
-          const inventoryData = data.inventory[0];
-          const formattedDate = inventoryData.date_at.split("T")[0];
-          setState({
-            in_out: inventoryData.in_out || null,
-            date_at: formattedDate || null,
-            lot: inventoryData.lot || null,
-            dn: inventoryData.dn || null,
-            po: inventoryData.po || null,
-            mo: inventoryData.mo || null,
-            qty: inventoryData.qty || 0,
-          });
+          if (data.inventory.length > 0) { // Pastikan data ada
+            const inventoryData = data.inventory[0];
+            const formattedDate = inventoryData.date_at.split("T")[0];
+            setState({
+              in_out: inventoryData.in_out || "",
+              date_at: formattedDate || "",
+              lot: inventoryData.lot || "",
+              dn: inventoryData.dn || "",
+              po: inventoryData.po || "",
+              mo: inventoryData.mo || "",
+              qty: inventoryData.qty || 0,
+            });
 
-          loadOption(inventoryData.product_id).then((options) => {
-            const productOption = options.find(
-              (option) => option.value === inventoryData.product_id
-            );
-            setSelectedProduct(productOption);
-          });
+            loadOption(inventoryData.product_id).then((options) => {
+              const productOption = options.find(
+                (option) => option.value === inventoryData.product_id
+              );
+              setSelectedProduct(productOption);
+            });
+          } else {
+            toast.error("Inventory not found");
+            router.push("/inventoryTransaction");
+          }
         })
-        .catch((error) => console.error("Error:", error));
+        .catch((error) => {
+          console.error("Error:", error);
+          toast.error("An error occurred while fetching inventory data");
+        });
     }
   }, [id]);
 
   const loadOption = (inputValue) => {
-    const apiUrl = `${
-      process.env.NEXT_PUBLIC_URL
-    }/api/search?search_query=${encodeURIComponent(inputValue)}`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_URL}/api/search?search_query=${encodeURIComponent(inputValue)}`;
     return fetch(apiUrl)
       .then((response) => {
         if (!response.ok) {
@@ -104,10 +110,9 @@ function InputInventory() {
     if (!validateField(state.in_out, "Transaction Type")) return false;
 
     if (["IN-INT", "IN-EXT", "OUT-INT", "OUT-EXT"].includes(state.in_out)) {
-      // if (!validateField(state.lot, "LOT No.")) return false;
+      if (!validateField(state.lot, "LOT No.")) return false;
 
       if (["IN-INT", "OUT-INT"].includes(state.in_out)) {
-        if (!validateField(state.lot, "LOT No.")) return false;
         if (!validateField(state.mo, "MO No.")) return false;
       }
 
@@ -133,21 +138,21 @@ function InputInventory() {
 
     // Konfirmasi sebelum mengirim data
     const result = await Swal.fire({
-      title: "Konfirmasi",
+      title: 'Konfirmasi',
       text: "Apakah Anda yakin ingin mengirim data ini?",
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Ya, kirim!",
-      cancelButtonText: "Batal",
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, kirim!',
+      cancelButtonText: 'Batal'
     });
 
     if (result.isConfirmed) {
-      const url = `${process.env.NEXT_PUBLIC_URL}/api/inventory_transaction`; // Hanya menggunakan endpoint untuk menambah inventaris
+      const url = `/api/edit_inventory?id=${id}`; // Endpoint untuk update inventory
 
       const postData = {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -168,10 +173,10 @@ function InputInventory() {
         const res = await fetch(url, postData);
         if (res.ok) {
           router.push("/inventoryTransaction");
-          toast.success("Data Successfully Input");
+          toast.success("Data Successfully Updated");
         } else {
           const errorData = await res.json();
-          toast.error(`Failed Input: ${errorData.message || "Unknown error"}`);
+          toast.error(`Failed to Update: ${errorData.message || "Unknown error"}`);
         }
       } catch (error) {
         console.error("Request failed:", error);
@@ -192,7 +197,7 @@ function InputInventory() {
     <RouteLayout>
       <div className="flex h-fit p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
         <div className="flex justify-center items-center">
-          <h1 className="font-medium text-4xl text-center">INPUT INVENTORY</h1>
+          <h1 className="font-medium text-4xl text-center">Input Inventory</h1>
         </div>
 
         {/** form input container */}
@@ -214,7 +219,7 @@ function InputInventory() {
               value={selectedProduct}
               onChange={handleProductChange}
               placeholder="Select a product..."
-              isDisabled={!!id}
+              isDisabled={false} // Menonaktifkan select saat dalam mode edit
             />
           </div>
         </div>
@@ -306,12 +311,7 @@ function InputInventory() {
               autoComplete="off"
               id="lot"
               name="lot"
-              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
-                state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"
-                  ? "disabled-input"
-                  : "enabled-input"
-              }`}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="LOT No."
               value={state.lot}
               onChange={handleChange}
@@ -332,12 +332,7 @@ function InputInventory() {
               autoComplete="off"
               id="dn"
               name="dn"
-              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
-                state.in_out === "IN-INT" || state.in_out === "OUT-INT"
-                  ? "disabled-input"
-                  : "enabled-input"
-              }`}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="DN No."
               value={state.dn}
               onChange={handleChange}
@@ -358,12 +353,7 @@ function InputInventory() {
               autoComplete="off"
               name="po"
               id="po"
-              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
-                state.in_out === "IN-INT" || state.in_out === "OUT-INT"
-                  ? "disabled-input"
-                  : "enabled-input"
-              }`}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="PO No."
               value={state.po}
               onChange={handleChange}
@@ -383,12 +373,7 @@ function InputInventory() {
               name="mo"
               id="mo"
               autoComplete="off"
-              // className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
-                state.in_out === "IN-EXT" || state.in_out === "OUT-EXT"
-                  ? "disabled-input"
-                  : "enabled-input"
-              }`}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="MO No."
               value={state.mo}
               onChange={handleChange}
@@ -405,17 +390,16 @@ function InputInventory() {
           Submit
         </button>
       </div>
-
-      <style jsx>{`
-        .disabled-input {
-          background-color: #e0e0e0; /* Gray background for disabled fields */
-        }
-        .enabled-input {
-          background-color: #ffffff; /* White background for enabled fields */
-        }
-      `}</style>
     </RouteLayout>
   );
 }
 
-export default InputInventory;
+const InputInventoryWithSuspense = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InputInventory />
+    </Suspense>
+  );
+};
+
+export default InputInventoryWithSuspense;
