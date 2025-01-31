@@ -1,15 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Uncomment if you want to use the experimental app directory feature
   // experimental: {
-  //     appDir: true
+  //   appDir: true,
   // },
+  
   async rewrites() {
-    return [{
-      source: '/auth/login',
-      destination: '/app/login'
-    },
+    return [
+      {
+        source: '/auth/login',
+        destination: '/app/login',
+      },
     ];
   },
+
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -19,7 +23,7 @@ const nextConfig = {
       };
     }
     return config;
-  }
-}
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
