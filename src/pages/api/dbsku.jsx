@@ -1,6 +1,8 @@
 import { query } from "@/libs/db";
+import { corsMiddleware } from "@/utils/corsMiddleware";
 
 export default async function handler(req, res) {
+  corsMiddleware(req, res);
   try {
     const { method, query: reqQuery } = req;
 
