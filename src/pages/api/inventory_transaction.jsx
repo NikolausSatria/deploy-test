@@ -100,10 +100,17 @@ export default async function handler(req, res) {
         countQuery += ` WHERE idt.deleted_at IS NULL`;
       }
 
-      if (startDate && endDate) {
-        sqlQuery += ` AND (idt.created_at BETWEEN ? AND ?)`;
-        countQuery += ` AND (idt.created_at BETWEEN ? AND ?)`;
-        values.push(startDate, endDate);
+      // Handle date filtering logic
+      if (startDate && !endDate) {
+        // Jika hanya startDate yang diisi
+        sqlQuery += ` AND idt.created_at >= ?`;
+        countQuery += ` AND idt.created_at >= ?`;
+        values.push(`${startDate} 00:00:00`);
+      } else if (startDate && endDate) {
+        // Jika startDate dan endDate diisi
+        sqlQuery += ` AND (idt.created_at >= ? AND idt.created_at <= ?)`;
+        countQuery += ` AND (idt.created_at >= ? AND idt.created_at <= ?)`;
+        values.push(`${startDate} 00:00:00`, `${endDate} 23:59:59`);
       }
 
       sqlQuery += ` GROUP BY combined.product_id, idt.date_at, idt.in_out ORDER BY idt.created_at DESC`;
@@ -116,7 +123,9 @@ export default async function handler(req, res) {
       try {
         const totalCountResult = await query({
           query: countQuery,
-          values: search ? [`%${search}%`, startDate, endDate].filter(Boolean) : [startDate, endDate].filter(Boolean),
+          values: search
+            ? [`%${search}%`, startDate, endDate].filter(Boolean)
+            : [startDate, endDate].filter(Boolean),
         });
 
         const inventory = await query({

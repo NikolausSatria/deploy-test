@@ -7,55 +7,75 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Link from "next/link";
 import FormattedDate from "@/components/FormattedDate";
+import Swal from "sweetalert2";
+import { DatePicker } from "antd";
+import moment from "moment";
 
 function InventoryTransaction() {
   const router = useRouter();
-
   const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 25;
 
-
-  useEffect(() => {  
-    getInventory(searchQuery, currentPage);  
-  }, [searchQuery, currentPage, startDate, endDate]);  
-
-  async function getInventory(query, page) {
-    setIsLoading(true);
-
+  async function fetchData(query, page, limit, startDate, endDate) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/inventory_transaction?search=${query}&page=${page}&limit=${itemsPerPage}&startDate=${startDate}&endDate=${endDate}`, // Menambahkan startDate dan endDate ke query
+        `${
+          process.env.NEXT_PUBLIC_URL
+        }/api/inventory_transaction?search=${query}&page=${page}&limit=${limit}&startDate=${
+          startDate || ""
+        }&endDate=${endDate || ""}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         }
       );
-      const response = await res.json();
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      return await res.json();
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      throw error;
+    }
+  }
+
+  // Mengambil data inventory untuk ditampilkan ke UI
+  useEffect(() => {
+    getInventory(searchQuery, currentPage);
+  }, [searchQuery, currentPage, startDate, endDate]);
+
+  async function getInventory(query, page) {
+    setIsLoading(true);
+    try {
+      const response = await fetchData(
+        query,
+        page,
+        itemsPerPage,
+        startDate,
+        endDate
+      );
       setInventory(response.inventory);
       setTotalPages(response.totalPages);
     } catch (error) {
+      // Menampilkan notifikasi error menggunakan SweetAlert2
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Failed to load inventory data. Please try again later.",
+      });
       console.error("Failed to load inventory:", error);
     } finally {
       setIsLoading(false);
     }
   }
 
-  const handleStartDateChange = (e) => {
-    setStartDate(e.target.value);
-  };
-
-  const handleEndDateChange = (e) => {
-    setEndDate(e.target.value);
-
-  };
-
+  // Handler untuk pencarian
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -66,36 +86,37 @@ function InventoryTransaction() {
     getInventory(searchQuery, 1);
   };
 
+  // Navigasi ke halaman detail
   const handleDetails = (item) => {
     router.push(`/inventoryTransaction/details/page?id=${item}`);
   };
 
+  // Unduh laporan inventory
   async function downloadCompleteInventory() {
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/inventory_transaction?search=${query}&page=${page}&limit=${itemsPerPage}&startDate=${startDate || ''}&endDate=${endDate || ''}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
+      const response = await fetchData(
+        searchQuery,
+        currentPage,
+        itemsPerPage,
+        startDate,
+        endDate
       );
-      const data = await res.json();
-      if (res.status === 200) {
-        createPdf(data.inventory);
-      } else {
-        console.error(
-          "Failed to download complete inventory data:",
-          data.message
-        );
-      }
+      createPdf(response.inventory);
     } catch (error) {
+      // Menampilkan notifikasi error menggunakan SweetAlert2
+      Swal.fire({
+        icon: "error",
+        title: "Download Failed",
+        text: "Failed to fetch complete inventory data. Please try again later.",
+      });
       console.error("Failed to fetch complete inventory data:", error);
     } finally {
       setIsLoading(false);
     }
   }
 
+  // Membuat file PDF menggunakan jsPDF dan jspdf-autotable
   function createPdf(data) {
     const doc = new jsPDF();
     const tableColumns = ["No", "ID", "Description", "Type", "Quantity"];
@@ -112,18 +133,19 @@ function InventoryTransaction() {
       startY: 20,
       head: [tableColumns],
       body: tableRows,
-      theme: "plain", // Menggunakan tema 'plain' untuk tabel tanpa warna
+      theme: "grid",
       styles: {
         font: "helvetica",
         fontSize: 10,
-        cellPadding: 2,
+        cellPadding: 3,
         overflow: "linebreak",
-        lineColor: [0, 0, 0], // Warna garis hitam
-        lineWidth: 0.1, // Ketebalan garis
+        lineColor: [0, 0, 0],
+        lineWidth: 0.2,
       },
       headStyles: {
         fillColor: [255, 255, 255], // Warna latar belakang header putih
         textColor: [0, 0, 0], // Warna teks hitam
+        fontStyle: "bold",
       },
       alternateRowStyles: {
         fillColor: [240, 240, 240], // Warna latar belakang baris genap
@@ -132,8 +154,14 @@ function InventoryTransaction() {
     // Mendapatkan timestamp
     const timestamp = new Date().toISOString().split("T")[0]; // Format YYYY-MM-DD
     const fileName = `inventory_transaction_report_${timestamp}.pdf`;
-
     doc.save(fileName);
+
+    // Menampilkan notifikasi sukses menggunakan SweetAlert2
+    Swal.fire({
+      icon: "success",
+      title: "Download Successful",
+      text: "Your inventory report has been downloaded successfully.",
+    });
   }
 
   return (
@@ -190,21 +218,43 @@ function InventoryTransaction() {
 
           {/* Date Range Filter */}
           <div className="flex items-center space-x-2 mt-4">
+            {/* Label "From" */}
             <span className="font-medium">From:</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={handleStartDateChange}
+
+            {/* Ant Design DatePicker untuk Tanggal Mulai */}
+            <DatePicker
+              value={startDate ? moment(startDate, "YYYY-MM-DD") : null} // Konversi string ke objek moment
+              onChange={(date) => {
+                if (date) {
+                  const formattedDate = date.format("YYYY-MM-DD"); // Format ke YYYY-MM-DD
+                  setStartDate(formattedDate);
+                  console.log("Start Date:", formattedDate);
+                } else {
+                  setStartDate(null);
+                  console.log("Start Date cleared");
+                }
+              }}
+              placeholder="Select Start Date"
               className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Start Date"
             />
+
+            {/* Label "To" */}
             <span className="font-medium">To:</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={handleEndDateChange}
+
+            {/* Ant Design DatePicker untuk Tanggal Akhir */}
+            <DatePicker
+              value={endDate ? moment(endDate, "YYYY-MM-DD") : null} // Konversi string ke objek moment
+              onChange={(date) => {
+                if (!startDate || (date && date.isAfter(moment(startDate)))) {
+                  const formattedDate = date ? date.format("YYYY-MM-DD") : null; // Format ke YYYY-MM-DD
+                  setEndDate(formattedDate);
+                  console.log("End Date:", formattedDate);
+                } else {
+                  console.log("End Date must be after Start Date");
+                }
+              }}
+              placeholder="Select End Date"
               className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="End Date"
             />
           </div>
         </form>
