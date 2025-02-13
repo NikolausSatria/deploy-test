@@ -50,7 +50,7 @@ export default NextAuth({
   ],
   pages: {
     signIn: '/login',
-    error: '/login',
+    error: '/login?error=true', 
   },
   secret: process.env.NEXTAUTH_SECRET, // Update to NEXTAUTH_SECRET
   session: {

@@ -1,12 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import HakedoLogo from "../images/Hakedologo.png";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 
-export default function Home() {
+export default function Login() {
   const router = useRouter();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -14,22 +14,23 @@ export default function Home() {
   const loginUser = async (e) => {
     e.preventDefault();
 
+    if (!userId || !password) {
+      toast.error("Please fill in both fields");
+      return;
+    }
+
     const result = await signIn("credentials", {
       redirect: false,
       userId,
       password,
     });
 
-    if (!result.error) {
+    if (result?.error) {
+      toast.error("Login Failed");
+      console.log("Login error:", result.error);
+    } else {
       toast.success("User Login Successfully");
       router.push("/dashboard");
-    } else {
-      toast.error("Login Failed");
-      console.log(result.error);
-
-      const url = new URL(window.location.href);
-      url.searchParams.delete("error");
-      history.replaceState(null, "", url.href);
     }
   };
 
@@ -38,9 +39,11 @@ export default function Home() {
       <div className="flex items-center justify-center">
         <Image
           src={HakedoLogo}
-          className="pl-5 m-10 left-[350px] top-[170px]"
+          className="pl-5 m-10"
           alt="company logo"
-        ></Image>
+          width={200}
+          height={100}
+        />
       </div>
       <div className="relative py-4 sm:max-w-xl sm:mx-auto flex space-x-4 justify-between">
         <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20 border-4 border-blue-500">
@@ -54,10 +57,9 @@ export default function Home() {
                   <div className="relative">
                     <input
                       autoComplete="off"
-                      id="User ID"
-                      name="User ID"
+                      id="userId"
                       type="text"
-                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="User ID"
                       onChange={(e) => setUserId(e.target.value)}
                     />
@@ -70,9 +72,8 @@ export default function Home() {
                     <input
                       autoComplete="off"
                       id="password"
-                      name="Password"
                       type="password"
-                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600"
+                      className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="Password"
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -80,16 +81,14 @@ export default function Home() {
                       Password
                     </label>
                   </div>
-                  <div className="relative">
-                    {/*<a href="/dashboard">*/}
-                    <br />
-                    <button
-                      id="submitButton"
-                      className="bg-blue-500 text-white rounded-md px-2 py-1 w-[300px] h-[50px]"
-                    >
-                      Login
-                    </button>
-                  </div>
+                  <br />
+                  <button
+                    type="submit" // Tambahkan type="submit" untuk tombol
+                    id="submitButton"
+                    className="bg-blue-500 text-white rounded-md px-2 py-1 w-[300px] h-[50px]"
+                  >
+                    Login
+                  </button>
                 </form>
               </div>
             </div>
