@@ -7,6 +7,11 @@ import AsyncSelect from "react-select/async";
 import { useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 
+
+const SearchParamsWrapper = ({ children }) => {
+  return <Suspense fallback={<div>Loading search parameters...</div>}>{children}</Suspense>;
+};
+
 const EditInventory = () => {
   const optionProductDetail = ["IN-INT", "OUT-INT", "IN-EXT", "OUT-EXT"];
   const { data: session } = useSession();
@@ -433,4 +438,10 @@ const EditInventory = () => {
   );
 };
 
-export default EditInventory;
+const EditInventoryWithSuspense = () => (
+  <SearchParamsWrapper>
+    <EditInventory />
+  </SearchParamsWrapper>
+);
+
+export default EditInventoryWithSuspense;
