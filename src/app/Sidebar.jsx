@@ -26,7 +26,6 @@ import {
 
 import { GrDocumentUpload } from "react-icons/gr";
 import { BsDatabaseFill } from "react-icons/bs";
-import { GoSidebarCollapse } from "react-icons/go";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 

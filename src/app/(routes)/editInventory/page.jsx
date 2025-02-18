@@ -433,12 +433,4 @@ const EditInventory = () => {
   );
 };
 
-const EditInventoryWithSuspense = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EditInventory />
-    </Suspense>
-  );
-};
-
-export default EditInventoryWithSuspense;
+export default EditInventory;

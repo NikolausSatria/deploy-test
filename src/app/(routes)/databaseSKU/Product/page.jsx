@@ -259,11 +259,9 @@ function DatabaseSku() {
             Next
           </button>
         </div>
-      </div>
+      </div>      
     </RouteLayout>
-  );
-
-  
+  );  
 }
 
 export default DatabaseSku;

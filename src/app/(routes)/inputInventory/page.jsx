@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
 import RouteLayout from "../RouteLayout";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import AsyncSelect from "react-select/async";
 import { useSession } from "next-auth/react";
@@ -11,8 +11,6 @@ function InputInventory() {
   const optionProductDetail = ["IN-INT", "OUT-INT", "IN-EXT", "OUT-EXT"];
   const { data: session } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // Ambil ID dari URL
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [state, setState] = useState({
@@ -24,42 +22,6 @@ function InputInventory() {
     mo: "",
     qty: 0,
   });
-
-  useEffect(() => {
-    if (id) {
-      fetch(`/api/edit_inventory?id=${id}`) // Menggunakan API baru
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.inventory.length > 0) { // Pastikan data ada
-            const inventoryData = data.inventory[0];
-            const formattedDate = inventoryData.date_at.split("T")[0];
-            setState({
-              in_out: inventoryData.in_out || "",
-              date_at: formattedDate || "",
-              lot: inventoryData.lot || "",
-              dn: inventoryData.dn || "",
-              po: inventoryData.po || "",
-              mo: inventoryData.mo || "",
-              qty: inventoryData.qty || 0,
-            });
-
-            loadOption(inventoryData.product_id).then((options) => {
-              const productOption = options.find(
-                (option) => option.value === inventoryData.product_id
-              );
-              setSelectedProduct(productOption);
-            });
-          } else {
-            toast.error("Inventory not found");
-            router.push("/inventoryTransaction");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          toast.error("An error occurred while fetching inventory data");
-        });
-    }
-  }, [id]);
 
   const loadOption = (inputValue) => {
     const apiUrl = `${process.env.NEXT_PUBLIC_URL}/api/search?search_query=${encodeURIComponent(inputValue)}`;
@@ -127,9 +89,7 @@ function InputInventory() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const isFormValid = validateForm();
-    if (!isFormValid) return;
+    if (!validateForm()) return;
 
     if (!session) {
       toast.error("Please login!");
@@ -144,15 +104,15 @@ function InputInventory() {
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Ya, kirim!',
-      cancelButtonText: 'Batal'
+      confirmButtonText: 'Yes!',
+      cancelButtonText: 'Cancel'
     });
 
     if (result.isConfirmed) {
-      const url = `/api/edit_inventory?id=${id}`; // Endpoint untuk update inventory
+      const url = `/api/inventory_transaction`; // Endpoint untuk update inventory
 
       const postData = {
-        method: "PUT",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -165,7 +125,7 @@ function InputInventory() {
           dn: state.dn,
           po: state.po,
           mo: state.mo,
-          qty: state.qty,
+          qty: parseInt(state.qty, 10),
         }),
       };
 
@@ -393,13 +353,4 @@ function InputInventory() {
     </RouteLayout>
   );
 }
-
-const InputInventoryWithSuspense = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <InputInventory />
-    </Suspense>
-  );
-};
-
-export default InputInventoryWithSuspense;
+export default InputInventory;

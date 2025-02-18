@@ -34,6 +34,8 @@ export default function Page() {
       confirmButtonText: "Yes",
       showCancelButton: true,
       cancelButtonText: "Close",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
     });
 
     if (result.isConfirmed) {
