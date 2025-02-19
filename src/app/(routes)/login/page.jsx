@@ -35,7 +35,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
+    <div className="container mx-auto flex flex-col items-center justify-center min-h-screen">
       <div className="flex items-center justify-center">
         <Image
           src={HakedoLogo}

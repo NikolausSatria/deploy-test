@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import HakedoLogo from "./Images/Hakedologo.png";
+import HakedoLogo from "./images/Hakedologo.png";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
@@ -35,14 +35,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
+    <div className="container mx-auto flex flex-col items-center justify-center min-h-screen">
       <div className="flex items-center justify-center">
         <Image
           src={HakedoLogo}
           className="pl-5 m-10"
           alt="company logo"
-          width={200} // Atur lebar sesuai kebutuhan
-          height={100} // Atur tinggi sesuai kebutuhan
+          width={200}
+          height={100}
         />
       </div>
       <div className="relative py-4 sm:max-w-xl sm:mx-auto flex space-x-4 justify-between">
@@ -58,7 +58,6 @@ export default function Login() {
                     <input
                       autoComplete="off"
                       id="userId"
-                      name="userId"
                       type="text"
                       className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="User ID"
@@ -73,7 +72,6 @@ export default function Login() {
                     <input
                       autoComplete="off"
                       id="password"
-                      name="password"
                       type="password"
                       className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600"
                       placeholder="Password"

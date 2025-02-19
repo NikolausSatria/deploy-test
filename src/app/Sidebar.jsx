@@ -63,7 +63,7 @@ const Sidebar = () => {
       confirmButtonText: 'Yes, logout!'
     }).then((result) => {
       if (result.isConfirmed) {
-        signOut({ callbackUrl: process.env.NEXT_PUBLIC_URL });
+        signOut({ callbackUrl: '/', redirect:true });
       }
     });
   };
