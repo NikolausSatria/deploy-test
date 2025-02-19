@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import HakedoLogo from "./images/Hakedologo.png";
+import HakedoLogo from "./Images/Hakedologo.png";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
