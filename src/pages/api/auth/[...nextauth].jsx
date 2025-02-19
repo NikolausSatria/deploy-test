@@ -50,7 +50,7 @@ export default NextAuth({
   ],
   pages: {
     signIn: '/login',
-    signOut: '/login',
+    signOut: '/',
     error: '/login?error=true', 
   },
   secret: process.env.NEXTAUTH_SECRET, // Update to NEXTAUTH_SECRET
@@ -61,6 +61,9 @@ export default NextAuth({
     updateAge: 2 * 60 * 60, // 2 hours
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      return url.startsWith(baseUrl) ? url : baseUrl;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

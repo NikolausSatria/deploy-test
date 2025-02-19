@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import LogoHakedo from "./Images/Hakedologo.png";
-import {
-  CollapsIcon,
-} from "../icons";
+import { CollapsIcon } from "../icons";
 
 import {
   MdSpaceDashboard,
@@ -22,7 +20,6 @@ import { signOut, useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 import { usePathname } from "next/navigation";
 
-
 const Sidebar = () => {
   const pathname = usePathname();
   const [toggleCollapse, setToggleCollapse] = useState(false);
@@ -34,7 +31,12 @@ const Sidebar = () => {
   const menuItems = [
     { id: 1, label: "Dashboard", icon: MdSpaceDashboard, link: "/dashboard" },
     { id: 2, label: "Input Inventory", icon: MdInput, link: "/inputInventory" },
-    { id: 3, label: "Create DN", icon: GrDocumentUpload, link: "/deliveryNoteForm" },
+    {
+      id: 3,
+      label: "Create DN",
+      icon: GrDocumentUpload,
+      link: "/deliveryNoteForm",
+    },
     {
       id: 4,
       label: "Inventory Transaction",
@@ -50,22 +52,6 @@ const Sidebar = () => {
   ];
 
   if (pathname === "/download") return null;
-
-  const handleLogout = () => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You will be logged out!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, logout!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        signOut({ callbackUrl: 'http://88.222.242.224' });
-      }
-    });
-  };
 
   const activeMenu = useMemo(
     () => menuItems.find((menu) => menu.link === router.pathname),
@@ -115,7 +101,12 @@ const Sidebar = () => {
       <div className="flex flex-col">
         <div className="flex items-center justify-between relative">
           <div className="flex items-center pl-1 gap-4">
-            <Image height={80} width={80} src={LogoHakedo} alt="Logo Hakedo Putra Mandiri"></Image>
+            <Image
+              height={80}
+              width={80}
+              src={LogoHakedo}
+              alt="Logo Hakedo Putra Mandiri"
+            ></Image>
             <span
               className={classNames("mt-2 text-md font-medium text-text", {
                 hidden: toggleCollapse,
@@ -146,45 +137,69 @@ const Sidebar = () => {
           </div>
         </div>
 
-        <div className="flex flex-col items-start mt-10">  
-        {menuItems.map(({ icon: Icon, ...menu }, index) => { // Menambahkan index sebagai parameter  
-          const classes = getNavItemClasses(menu);  
-          return (  
-            <div key={menu.id || index} className={classes}> {/* Menambahkan key di sini */}  
-              <Link href={menu.link}>  
-                <div className="flex py-4 px-3 items-center w-full h-full">  
-                  <div style={{ width: "2.5rem" }}>  
-                    <Icon />  
-                  </div>  
-                  {!toggleCollapse && (  
-                    <span  
-                      className={classNames(  
-                        "text-md font-medium text-text-light"  
-                      )}  
-                    >  
-                      {menu.label}  
-                    </span>  
-                  )}  
-                </div>  
-              </Link>  
-            </div>  
-          );  
-        })}  
-      </div> 
+        <div className="flex flex-col items-start mt-10">
+          {menuItems.map(({ icon: Icon, ...menu }, index) => {
+            // Menambahkan index sebagai parameter
+            const classes = getNavItemClasses(menu);
+            return (
+              <div key={menu.id || index} className={classes}>
+                {" "}
+                {/* Menambahkan key di sini */}
+                <Link href={menu.link}>
+                  <div className="flex py-4 px-3 items-center w-full h-full">
+                    <div style={{ width: "2.5rem" }}>
+                      <Icon />
+                    </div>
+                    {!toggleCollapse && (
+                      <span
+                        className={classNames(
+                          "text-md font-medium text-text-light"
+                        )}
+                      >
+                        {menu.label}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <button onClick={handleLogout}>
-        <div className={`${getNavItemClasses({})} px-3 py-4`}>
-          <div style={{ width: "2.5rem" }}>
-            <MdLogout />
+      <Link href="/api/auth/signout">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You will be logged out!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6",
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, logout!",
+            }).then((result) => {
+              if (result.isConfirmed) {
+                signOut();
+              }
+            });
+          }}
+        >
+          <div className={`${getNavItemClasses({})} px-3 py-4`}>
+            <div style={{ width: "2.5rem" }}>
+              <MdLogout />
+            </div>
+            {!toggleCollapse && (
+              <span
+                className={classNames("text-md font-medium text-text-light")}
+              >
+                Logout
+              </span>
+            )}
           </div>
-          {!toggleCollapse && (
-            <span className={classNames("text-md font-medium text-text-light")}>
-              Logout
-            </span>
-          )}
-        </div>
-      </button>
+        </button>
+      </Link>
     </div>
   );
 };
