@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import LogoHakedo from "./Images/Hakedologo.png";
-
 import {
   CollapsIcon,
 } from "../icons";
@@ -63,7 +62,7 @@ const Sidebar = () => {
       confirmButtonText: 'Yes, logout!'
     }).then((result) => {
       if (result.isConfirmed) {
-        signOut({ callbackUrl: '/', redirect:true });
+        signOut({ callbackUrl: 'http://88.222.242.224' });
       }
     });
   };
