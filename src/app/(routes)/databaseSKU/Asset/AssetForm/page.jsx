@@ -56,12 +56,12 @@ export default function Page() {
         `${process.env.NEXT_PUBLIC_URL}/api/asset`,
         postData
       );
-      const response = await res.json();
-      if (response.ok) {
-        setCreated(true);
-      } else {
-        console.error("Server responded with non-200 code:", response);
+      if (!res.ok) {
+        console.error("Server responded with non-200 code:", res.status);
+        return;
       }
+      const response = await res.json();
+      setCreated(true);
     } catch (error) {
       console.error("Network error:", error);
     }
@@ -96,6 +96,7 @@ export default function Page() {
               id="material_id"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Material ID"
+              value={state.material_id}
               onChange={(e) =>
                 setState({ ...state, material_id: e.target.value })
               }
@@ -115,6 +116,7 @@ export default function Page() {
               id="asset_number"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Asset Number"
+              value={state.asset_number}
               onChange={(e) =>
                 setState({ ...state, asset_number: e.target.value })
               }
@@ -122,24 +124,6 @@ export default function Page() {
             />
           </div>
         </div>
-        {/* Date container */}
-        {/* <div className="w-full px-3">
-          <div className="mb-6">
-            <label
-              htmlFor="datecontainer"
-              className="mb-3 block text-base font-medium text-gray-900"
-            >
-              Date
-            </label>
-            <input
-              type="date"
-              name="date"
-              id="datecontainer"
-              className="w-full rounded-md border border-gray-300 text-gray-900 bg-gray-50 py-3 px-6 text-base font-medium outline-none focus:border-[#6A64F1] focus:shadow-md"
-            />
-          </div>
-        </div> */}
-
         <div className="px-3 flex space-x-5">
           {/* Material Type */}
           <div className="mb-5 w-1/2">
@@ -154,6 +138,7 @@ export default function Page() {
               id="material_type"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Material Type"
+              value={state.material_type}
               onChange={(e) =>
                 setState({ ...state, material_type: e.target.value })
               }
@@ -173,6 +158,7 @@ export default function Page() {
               id="material_description"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="Material Description"
+              value={state.material_description}
               onChange={(e) =>
                 setState({ ...state, material_description: e.target.value })
               }

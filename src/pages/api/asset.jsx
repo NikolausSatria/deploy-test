@@ -70,14 +70,14 @@ export default async function handler(req, res) {
           data: { material_id, asset_number, material_type, material_description },
         });
       } catch (error) {
-        console.error("Error inserting asset:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        console.error("Database error:", error);
+        return res.status(500).json({ error: error.message || "Database error occurred" });
       }
     } else {
-      return res.status(405).json({ message: 'Method Not Allowed' });
+      return res.status(405).json({ message: "Method Not Allowed" });
     }
   } catch (error) {
-    console.error("Unexpected error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error("Database error:", error);
+    return res.status(500).json({ error: error.message || "Database error occurred" });
   }
 }

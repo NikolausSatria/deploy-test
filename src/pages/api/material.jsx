@@ -24,14 +24,13 @@ export default async function handler(req, res) {
       `;
 
       if (search) {
-        sqlQuery += ` WHERE material_description LIKE CONCAT('%', ?, '%') 
-                      OR material_id LIKE CONCAT('%', ?, '%')`;
-        countQuery += ` WHERE material_description LIKE CONCAT('%', ?, '%') 
-                        OR material_id LIKE CONCAT('%', ?, '%')`;
-        values.push(search, search);
+        sqlQuery += ` WHERE material_description LIKE ? OR material_id LIKE ?`;
+        countQuery += ` WHERE material_description LIKE ? OR material_id LIKE ?`;
+        values.push(`%${search}%`, `%${search}%`);
       }
 
-      sqlQuery += ` ORDER BY material_id LIMIT ${limitNum} OFFSET ${offset}`;
+      sqlQuery += ` ORDER BY material_id LIMIT ? OFFSET ?`;
+      values.push(limitNum, offset);
 
       try {
         const totalCountResult = await query({
@@ -49,8 +48,8 @@ export default async function handler(req, res) {
 
         return res.status(200).json({ materials, totalPages });
       } catch (error) {
-        console.error("Error fetching materials:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        console.error("Database error:", error);
+        return res.status(500).json({ error: error.message || "Database error occurred" });
       }
     } else if (req.method === "POST") {
       const {
@@ -63,9 +62,17 @@ export default async function handler(req, res) {
       } = req.body;
 
       // Validate input
-      if (!material_id || !material_type || !material_description || 
-          isNaN(minimum_stock) || isNaN(rop) || isNaN(maximum_stock)) {
-        return res.status(400).json({ error: "Missing or invalid required fields" });
+      if (
+        !material_id ||
+        !material_type ||
+        !material_description ||
+        isNaN(minimum_stock) ||
+        isNaN(rop) ||
+        isNaN(maximum_stock)
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Missing or invalid required fields" });
       }
 
       try {
@@ -78,9 +85,9 @@ export default async function handler(req, res) {
             material_id,
             material_type,
             material_description,
-            parseFloat(minimum_stock),
-            parseFloat(rop),
-            parseFloat(maximum_stock),
+            minimum_stock,
+            rop,
+            maximum_stock,
           ],
         });
 
@@ -96,14 +103,14 @@ export default async function handler(req, res) {
           },
         });
       } catch (error) {
-        console.error("Error adding material:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        console.error("Database error:", error);
+        return res.status(500).json({ error: error.message || "Database error occurred" });
       }
     } else {
-      return res.status(405).json({ message: 'Method Not Allowed' });
+      return res.status(405).json({ message: "Method Not Allowed" });
     }
   } catch (error) {
-    console.error("Unexpected error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error("Database error:", error);
+    return res.status(500).json({ error: error.message || "Database error occurred" });
   }
 }

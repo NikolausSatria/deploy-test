@@ -53,6 +53,7 @@ export default NextAuth({
     error: '/login?error=true', 
   },
   secret: process.env.NEXTAUTH_SECRET, // Update to NEXTAUTH_SECRET
+  trustHost: true,
   session: {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 hours
@@ -68,10 +69,13 @@ export default NextAuth({
       return token;
     },
     async session({ session, token }) {
-      session.user = session.user || {};
-      if (token.id) session.user.id = token.id;
-      if (token.name) session.user.name = token.name;
-      if (token.position) session.user.position = token.position;
+      if (token) {
+        session.user = {
+          id: token.id,
+          name: token.name,
+          position: token.position,
+        };
+      }
       return session;
     },
   },

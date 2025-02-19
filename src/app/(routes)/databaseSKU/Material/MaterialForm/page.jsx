@@ -1,12 +1,11 @@
 "use client";
 import RouteLayout from "@/app/(routes)/RouteLayout";
 import Link from "next/link";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
-
 
 export default function MaterialForm() {
   const [created, setCreated] = useState(false);
@@ -33,13 +32,13 @@ export default function MaterialForm() {
     }).then((result) => {
       if (result.isConfirmed) {
         AddSku();
-        toast.success("Input Successfully")
-        router.push('/databaseSKU/Material')
+        toast.success("Input Successfully");
+        router.push("/databaseSKU/Material");
       } else {
       }
     });
   };
-  
+
   async function AddSku() {
     const postData = {
       method: "POST",
@@ -52,22 +51,27 @@ export default function MaterialForm() {
         material_description: state.material_description,
         minimum_stock: state.minimum_stock,
         rop: state.rop,
-        maximum_stock: state.maximum_stock,
+        maximum_stock: state.maximum_stock
       }),
     };
-  
+
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/api/material`,
-        postData
-      );
-      if (res.ok) {
-        setCreated(true);
-      } else {
-        console.error("Server responded with non-200 code:", res);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/material`, postData);
+    
+      if (!res.ok) { 
+        const errorData = await res.json(); // Ambil pesan error dari server
+        console.error("Server responded with non-200 code:", errorData);
+        toast.error(`Error: ${errorData.message || "Unknown error"}`);
+        return;
       }
+    
+      const responseData = await res.json(); // Ambil response JSON kalau sukses
+      setCreated(true);
+      toast.success("Material added successfully!");
+    
     } catch (error) {
       console.error("Network error:", error);
+      toast.error("Network error, please try again.");
     }
   }
   return (
@@ -178,7 +182,7 @@ export default function MaterialForm() {
               ROP
             </label>
             <input
-              type="text"
+              type="number"
               id="material"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="ROP"
@@ -202,19 +206,22 @@ export default function MaterialForm() {
             placeholder="5"
             min="0"
             className="w-full appearance-none rounded-md border border-gray-300 text-gray-900 bg-gray-50 py-3 px-6 text-base font-medium  outline-none focus:border-[#6A64F1] focus:shadow-md"
+            value={state.maximum_stock}
+            onChange={(e) =>
+              setState({ ...state, maximum_stock: e.target.value })
+            }
+            required
           />
         </div>
 
         {/* Submit button */}
-        <Link href={"/Confirmpage"} passHref>
-          <button
-            type="button"
-            className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
-            onClick={handleSubmit}
-          >
-            Submit
-          </button>
-        </Link>
+        <button
+          type="button"
+          className="text-white h-[50px] mt-5 bg-blue-700 hover:bg-blue-600 outline-none focus:font-medium rounded-full text-sm px-5 py-2.5 text-center mr-2 mb- w-full"
+          onClick={handleSubmit}
+        >
+          Submit
+        </button>
       </div>
     </RouteLayout>
   );
