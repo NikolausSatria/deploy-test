@@ -77,14 +77,14 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
   if (error) return <div>Error: {error}</div>;
   return (  
     <div>  
-      <div className="flex justify-start px-4 pt-2">  
+      {/* <div className="flex justify-start px-4 pt-2">  
         <button  
           className="p-2 rounded text-blue border-2 border-blue-500 hover:bg-blue-500 hover:text-white duration-100"  
           onClick={printDocument}  
         >  
           Download as PDF  
         </button>  
-      </div>  
+      </div>   */}
   
       <>  
         {deliveryData && deliveryData.length > 0 ? (  

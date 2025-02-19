@@ -54,7 +54,7 @@ const Details = () => {
           let totalIn = 0;
           let totalOut = 0;
 
-          response.inventory.forEach(item => {
+          response.inventory.forEach((item) => {
             if (item.in_out === "IN-INT") {
               totalIn += item.qty;
             } else if (item.in_out === "OUT-EXT") {
@@ -86,12 +86,14 @@ const Details = () => {
 
   const handleDelete = async (id, item) => {
     Swal.fire({
-      title: "DELETE",
-      text: `Are you sure you want to delete ${item}?`,
-      confirmButtonText: "Delete",
+      title: "Are you sure?",
+      text: `This action will permanently delete "${item}". This cannot be undone.`,
+      icon: "warning",
+      confirmButtonText: "Yes, Delete",
       confirmButtonColor: "#d33",
       showCancelButton: true,
       cancelButtonText: "Cancel",
+      cancelButtonColor: "#6c757d",
     }).then((result) => {
       if (result.isConfirmed) {
         fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
@@ -154,127 +156,119 @@ const Details = () => {
 
   return (
     <RouteLayout>
-      <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        <div className="flex justify-between items-center">
+      <div className="flex h-full p-6 flex-col bg-white text-left font-sans font-medium shadow-lg rounded-lg">
+        {/* Header */}
+        <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow-sm mb-6">
           <Link href={"/inventoryTransaction"}>
-            <button>
-              <BiArrowBack className="cursor-pointer" size={"25px"} />
+            <button className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 rounded-lg shadow-sm hover:bg-gray-200 transition">
+              <BiArrowBack size={"20px"} />
+              <span className="text-sm font-medium">Back</span>
             </button>
           </Link>
-          <div className="flex flex-col mb-4">
-            <h1 className="font-medium text-2xl">{title.split(";")[0]}</h1>
-            <span className="text-sm text-gray-500">ID: {productId}</span>
-            <span className="font-medium text-xl">Total Qty: {totalStock}</span>
+
+          {/* Inventory Info */}
+          <div className="text-center">
+            <h1 className="text-xl font-semibold text-gray-800">
+              {title.split(";")[0]}
+            </h1>
+            <p className="text-sm text-gray-500">
+              ID: <span className="font-medium">{productId}</span>
+            </p>
+          </div>
+
+          {/* Total Qty */}
+          <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow">
+            <span className="text-sm">Total Qty</span>
+            <h2 className="text-lg font-semibold">{totalStock}</h2>
           </div>
         </div>
 
-        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
-          <table className="min-w-full">
+        {/* Table Container */}
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  No
-                </th>
-                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Date
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Status
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Description
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Qty
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Date Created
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Employee
-                </th>
-                <th className="px-2 py-3 border-b-2 border-gray-300"></th>
-                <th className="px-2 py-3 border-b-2 border-gray-300"></th>
+              <tr className="bg-gray-100 text-gray-700 text-sm font-semibold">
+                {[
+                  "No",
+                  "Date",
+                  "Status",
+                  "Description",
+                  "Qty",
+                  "Date Created",
+                  "Employee",
+                  "Action",
+                ].map((heading, index) => (
+                  <th key={index} className="px-4 py-3 border-b text-left">
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="bg-white">
-              {/* Cek apakah inventory kosong */}
+            <tbody>
               {inventory.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={9}
                     className="px-4 py-4 text-center text-gray-500"
                   >
                     Tidak ada data
                   </td>
                 </tr>
               ) : (
-                inventory.map((item, index) => {
-                  return (
-                    <tr key={index}>
-                      <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {index + 1}
-                      </td>
-                      {/* Date */}
-                      <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        <FormattedDate dateStr={item.date_at} dateFormat="dd-MM-yyyy" />
-                      </td>
-                      {/* Status */}
-                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {item.in_out}
-                      </td>
-                      {/* Description */}
-                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {item.description}
-                      </td>
-                      {/* Quantity */}
-                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {item.qty}
-                      </td>
-                      {/* Created at */}
-                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        <FormattedDate dateStr={item.created_at} dateFormat="PPpp" />
-                      </td>
-                      {/* Employee */}
-                      <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        {item.employee_name}
-                      </td>
+                inventory.map((item, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      <FormattedDate
+                        dateStr={item.date_at}
+                        dateFormat="dd-MM-yyyy"
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{item.in_out}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {item.description}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-gray-700">
+                      {item.qty}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      <FormattedDate
+                        dateStr={item.created_at}
+                        dateFormat="PPpp"
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {item.employee_name}
+                    </td>
+                    {/* Action Buttons */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-2">
+                        {/* Edit Button */}
+                        <button
+                          className="p-2 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition transform hover:scale-105"
+                          onClick={() => handleUpdate(item.id)}
+                        >
+                          <FaRegEdit size={"20px"} />
+                        </button>
 
-                      {/* Icon container */}
-                      <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                        <div className="flex items-center space-x-2">
-                          {/* button Edit */}
+                        {/* Delete Button (Hanya muncul jika bukan 'user') */}
+                        {session.user.position !== "user" && (
                           <button
-                            className="p-1 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
-                            onClick={() => handleUpdate(item.id)}
+                            className="p-2 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition transform hover:scale-105"
+                            onClick={() =>
+                              handleDelete(item.id, item.product_id)
+                            }
                           >
-                            <FaRegEdit size={"25px"} />
+                            <MdDeleteForever size={"20px"} />
                           </button>
-
-                          {/* button Delete */}
-                          {session.user.position !== "user" && (
-                            <button
-                              className="p-1 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300"
-                              onClick={() =>
-                                handleDelete(item.id, item.product_id)
-                              }
-                            >
-                              <MdDeleteForever size={"25px"} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <th className="px-4 py-3 border-b-2 border-gray-300"></th>
-                    </tr>
-                  );
-                })
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
-          {/* Footer Information */}
-          <div className="sm:flex-1 sm:flex sm:items-center sm:justify-between mt-4 work-sans">
-            <div></div>
-          </div>
         </div>
       </div>
     </RouteLayout>

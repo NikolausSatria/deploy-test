@@ -68,6 +68,7 @@ function InventoryTransaction() {
         icon: "error",
         title: "Oops...",
         text: "Failed to load inventory data. Please try again later.",
+        confirmButtonColor: "#3085d6",
       });
       console.error("Failed to load inventory:", error);
     } finally {
@@ -109,6 +110,7 @@ function InventoryTransaction() {
         icon: "error",
         title: "Download Failed",
         text: "Failed to fetch complete inventory data. Please try again later.",
+        confirmButtonColor: "#3085d6",
       });
       console.error("Failed to fetch complete inventory data:", error);
     } finally {
@@ -161,193 +163,136 @@ function InventoryTransaction() {
       icon: "success",
       title: "Download Successful",
       text: "Your inventory report has been downloaded successfully.",
+      confirmButtonColor: "#3085d6",
     });
   }
 
   return (
     <RouteLayout>
-      <div className="flex h-full p-5 flex-col bg-white text-left font-sans font-medium shadow-md">
-        {/* Header Button */}
-        <div className="flex justify-between items-center">
-          <h1 className="font-medium text-3xl flex-1 text-center">
+      <div className="flex flex-col h-full p-6 bg-white shadow-md rounded-lg">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 text-center flex-1">
             INVENTORY TRANSACTION
           </h1>
         </div>
 
-        <form className="p-7" onSubmit={handleSearch}>
-          <label
-            htmlFor="default-search"
-            className="mb-2 text-sm font-medium text-gray-900 sr-only"
-          >
-            Search
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <svg
-                aria-hidden="true"
-                className="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
-            </div>
+        {/* Search and Date Filter */}
+        <form className="space-y-4" onSubmit={handleSearch}>
+          <div className="flex items-center space-x-2">
             <input
               type="search"
-              id="default-search"
-              className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-700 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 p-3 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
               placeholder="Search Inventory by Name"
               value={searchQuery}
               onChange={handleSearchChange}
               required
-            ></input>
+            />
             <button
               type="submit"
-              className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2"
+              className="px-5 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               Search
             </button>
           </div>
 
-          {/* Date Range Filter */}
-          <div className="flex items-center space-x-2 mt-4">
-            {/* Label "From" */}
-            <span className="font-medium">From:</span>
-
-            {/* Ant Design DatePicker untuk Tanggal Mulai */}
-            <DatePicker
-              value={startDate ? moment(startDate, "YYYY-MM-DD") : null} // Konversi string ke objek moment
-              onChange={(date) => {
-                if (date) {
-                  const formattedDate = date.format("YYYY-MM-DD"); // Format ke YYYY-MM-DD
-                  setStartDate(formattedDate);
-                  console.log("Start Date:", formattedDate);
-                } else {
-                  setStartDate(null);
-                  console.log("Start Date cleared");
+          {/* Date Filter & Categories */}
+          <div className="flex justify-between items-center">
+            {/* Date Filter on the Left */}
+            <div className="flex items-center space-x-4">
+              <span className="font-medium">From:</span>
+              <DatePicker
+                className="border rounded p-2"
+                value={startDate ? moment(startDate, "YYYY-MM-DD") : null}
+                onChange={(date) =>
+                  setStartDate(date ? date.format("YYYY-MM-DD") : null)
                 }
-              }}
-              placeholder="Select Start Date"
-              className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-
-            {/* Label "To" */}
-            <span className="font-medium">To:</span>
-
-            {/* Ant Design DatePicker untuk Tanggal Akhir */}
-            <DatePicker
-              value={endDate ? moment(endDate, "YYYY-MM-DD") : null} // Konversi string ke objek moment
-              onChange={(date) => {
-                if (!startDate || (date && date.isAfter(moment(startDate)))) {
-                  const formattedDate = date ? date.format("YYYY-MM-DD") : null; // Format ke YYYY-MM-DD
-                  setEndDate(formattedDate);
-                  console.log("End Date:", formattedDate);
-                } else {
-                  console.log("End Date must be after Start Date");
+              />
+              <span className="font-medium">To:</span>
+              <DatePicker
+                className="border rounded p-2"
+                value={endDate ? moment(endDate, "YYYY-MM-DD") : null}
+                onChange={(date) =>
+                  setEndDate(date ? date.format("YYYY-MM-DD") : null)
                 }
-              }}
-              placeholder="Select End Date"
-              className="border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              />
+            </div>
+
+            {/* Categories on the Right */}
+            <div className="flex space-x-2">
+              {[
+                {
+                  label: "Product",
+                  href: "/inventoryTransaction/Product_Inventory",
+                },
+                {
+                  label: "Asset",
+                  href: "/inventoryTransaction/Asset_Inventory",
+                },
+                {
+                  label: "Material",
+                  href: "/inventoryTransaction/Material_Inventory",
+                },
+              ].map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="px-4 py-2 text-blue-600 border rounded-lg hover:bg-blue-700 hover:text-white"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         </form>
 
-        {/* Categories Menubar */}
-        <div className="flex flex-row-reverse">
-          <nav className="relative z-0 inline-flex shadow-sm">
-            <div className="flex justify-center items-center">
-              <Link
-                href="/inventoryTransaction/Product_Inventory"
-                className="inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm font-medium text-blue-700 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
-              >
-                Product
-              </Link>
-              <Link
-                href="/inventoryTransaction/Asset_Inventory"
-                className="inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
-              >
-                Asset
-              </Link>
-              <Link
-                href="/inventoryTransaction/Material_Inventory"
-                className="inline-flex items-center px-4 py-2 border rounded border-gray-300 bg-white text-sm font-medium text-blue-600 focus:z-10 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue transition ease-in-out duration-200 hover:bg-blue-700 hover:text-white"
-              >
-                Material
-              </Link>
-            </div>
-          </nav>
-        </div>
-
-        <div className="justify-center items-center max-w-full max-h-screen shadow bg-white shadow-dashboard px-4 pt-5 mt-4 rounded-bl-lg rounded-br-lg overflow-y-auto overflow-x">
-          <table className="min-w-full">
+        {/* Table */}
+        <div className="overflow-auto rounded-lg shadow mt-4">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr>
-                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  No
-                </th>
-                <th className="px-2 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  ID
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Description
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Type
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Quantity
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Date Created
-                </th>
-                <th className="px-4 py-3 border-b-2 border-gray-300 text-left text-sm leading-4 text-blue-500 tracking-wider">
-                  Action
-                </th>
+              <tr className="bg-blue-100 text-blue-700">
+                {[
+                  "No",
+                  "ID",
+                  "Description",
+                  "Type",
+                  "Quantity",
+                  "Date Created",
+                  "Action",
+                ].map((heading) => (
+                  <th key={heading} className="px-4 py-3 border-b">
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
-
-            <tbody className="bg-white">
+            <tbody className="bg-white divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-4">
+                  <td colSpan="7" className="text-center py-4">
                     Loading...
                   </td>
                 </tr>
-              ) : Array.isArray(inventory) && inventory.length > 0 ? (
+              ) : inventory.length > 0 ? (
                 inventory.map((item, index) => (
-                  <tr key={index}>
-                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                  <tr key={index} className="hover:bg-gray-100">
+                    <td className="px-4 py-3">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-2 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {item.product_id}
-                    </td>
-                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {item.description}
-                    </td>
-                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {item.type}
-                    </td>
-                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
-                      {item.qty}
-                    </td>
-                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-3">{item.product_id}</td>
+                    <td className="px-4 py-3">{item.description}</td>
+                    <td className="px-4 py-3">{item.type}</td>
+                    <td className="px-4 py-3">{item.qty}</td>
+                    <td className="px-4 py-3">
                       <FormattedDate
                         dateStr={item.created_at}
                         dateFormat="dd-MM-yyyy"
                       />
                     </td>
-                    <td className="px-4 py-4 whitespace-no-wrap border-b border-gray-300 text-sm leading-5 text-gray-500">
+                    <td className="px-4 py-3">
                       <button
                         onClick={() => handleDetails(item.product_id)}
-                        className="text-white bg-blue-500 hover:bg-blue-700 font-semibold py-1 px-2 rounded"
+                        className="px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-700"
                       >
                         Details
                       </button>
@@ -356,7 +301,7 @@ function InventoryTransaction() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="11" className="text-center py-4">
+                  <td colSpan="7" className="text-center py-4">
                     No data available
                   </td>
                 </tr>
@@ -364,12 +309,13 @@ function InventoryTransaction() {
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
-        <div className="flex justify-between mt-4">
+
+        {/* Pagination & Download */}
+        <div className="flex justify-between items-center mt-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
           >
             Previous
           </button>
@@ -381,21 +327,18 @@ function InventoryTransaction() {
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-blue-700 text-white rounded disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
           >
             Next
           </button>
         </div>
 
-        <div className="flex justify-start">
-          <button
-            onClick={downloadCompleteInventory}
-            className="px-4 py-2 mt-4 text-white bg-blue-500 hover:bg-blue-700 font-semibold rounded"
-          >
-            <BsDownload className="inline mr-2" />
-            Download All
-          </button>
-        </div>
+        <button
+          onClick={downloadCompleteInventory}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          <BsDownload className="inline mr-2" /> Download All
+        </button>
       </div>
     </RouteLayout>
   );

@@ -106,12 +106,14 @@ function deliveryNoteForm() {
 
     // Tampilkan konfirmasi sebelum mengirim
     const result = await Swal.fire({
-      title: "Konfirmasi",
-      text: "Apakah Anda yakin ingin mengirim data ini?",
+      title: "Confirmation",
+      text: "Are you sure you want to submit this data?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Ya, kirim!",
-      cancelButtonText: "Tidak, batalkan",
+      confirmButtonText: "Submit!",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
     });
 
     if (result.isConfirmed) {
@@ -136,17 +138,16 @@ function deliveryNoteForm() {
             text: "Successfully save Delivery Note.",
             icon: "success",
             confirmButtonText: "Download File",
-            showCancelButton: true,
-            cancelButtonText: "Close",
+            confirmButtonColor: "#3085d6",
           }).then((result) => {
             if (result.isConfirmed) {
               const _dn_no = encodeURIComponent(state.dn);
               const _so_no = encodeURIComponent(state.so);
               const _date_at = encodeURIComponent(state.date_at);
               const _customer_id = encodeURIComponent(state.customer_id);
-              router.push(
-                `/download?delivery_note_no=${_dn_no}&so_no=${_so_no}&date_at=${_date_at}&customer_id=${_customer_id}`
-              );
+              const downloadUrl = `/download?delivery_note_no=${_dn_no}&so_no=${_so_no}&date_at=${_date_at}&customer_id=${_customer_id}`;
+              window.open(downloadUrl, "_blank");
+              
             } else {
               router.push(`/inventoryTransaction`);
             }
@@ -155,7 +156,8 @@ function deliveryNoteForm() {
           Swal.fire({
             icon: "error",
             title: "Oops...",
-            text: "Failed to Save Data: " + data.message, // Tampilkan pesan error dari server
+            text: "Failed to Save Data: " + data.message,
+            confirmButtonColor: "#3085d6", // Tampilkan pesan error dari server
           });
         }
       } catch (error) {
@@ -163,7 +165,8 @@ function deliveryNoteForm() {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Error: " + error.message, // Tampilkan pesan error
+          text: "Error: " + error.message,
+          confirmButtonColor: "#3085d6", // Tampilkan pesan error
         });
       } finally {
         setLoading(false);

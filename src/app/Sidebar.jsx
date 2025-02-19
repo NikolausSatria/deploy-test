@@ -7,30 +7,25 @@ import Image from "next/image";
 import LogoHakedo from "./Images/Hakedologo.png";
 
 import {
-  ArticleIcon,
   CollapsIcon,
-  HomeIcon,
-  LogoIcon,
-  LogoutIcon,
-  UsersIcon,
-  VideosIcon,
 } from "../icons";
 
 import {
   MdSpaceDashboard,
   MdInput,
   MdInventory,
-  MdOutlineHistory,
   MdLogout,
 } from "react-icons/md";
 
 import { GrDocumentUpload } from "react-icons/gr";
 import { BsDatabaseFill } from "react-icons/bs";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Swal from "sweetalert2";
+import { usePathname } from "next/navigation";
 
 
 const Sidebar = () => {
+  const pathname = usePathname();
   const [toggleCollapse, setToggleCollapse] = useState(false);
 
   const router = useRouter();
@@ -55,6 +50,8 @@ const Sidebar = () => {
     },
   ];
 
+  if (pathname === "/download") return null;
+
   const handleLogout = () => {
     Swal.fire({
       title: 'Are you sure?',
@@ -66,7 +63,7 @@ const Sidebar = () => {
       confirmButtonText: 'Yes, logout!'
     }).then((result) => {
       if (result.isConfirmed) {
-        signOut();
+        signOut({ callbackUrl: "/login" });
       }
     });
   };

@@ -53,10 +53,10 @@ function DatabaseSku() {
 
   return (
     <RouteLayout>
-      <div className="flex flex-col h-full p-5 bg-white font-sans text-left shadow-md">
+      <div className="flex flex-col h-full p-6 bg-white shadow-md rounded-lg">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-medium text-center flex-1">
+          <h1 className="text-2xl font-bold text-gray-800 text-center flex-1">
             DATABASE SKU
           </h1>
           <Link href={"databaseSKU/Product/ProductForm"}>
@@ -66,109 +66,100 @@ function DatabaseSku() {
           </Link>
         </div>
 
-        {/* Search Bar */}
-        <form className="mb-6" onSubmit={handleSearch}>
-          <div className="relative">
+        {/* Search and Categories */}
+        <form className="mb-4 space-y-4" onSubmit={handleSearch}>
+          {/* Search Bar */}
+          <div className="flex items-center space-x-2">
             <input
               type="search"
-              id="default-search"
-              className="block w-full p-4 pl-10 text-sm border border-gray-700 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Search Inventory by Name or ID"
+              className="flex-1 p-3 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Search Inventory by Name"
               value={searchQuery}
               onChange={handleSearchChange}
               required
             />
             <button
               type="submit"
-              className="absolute right-2.5 bottom-2.5 px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300"
+              className="px-5 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               Search
             </button>
           </div>
+
+          {/* Categories on the Right */}
+          <div className="flex justify-between items-center">
+            <div></div> {/* Categories on the Right */}
+            <div className="flex space-x-2">
+              {[
+                {
+                  label: "Product",
+                  href: "/databaseSKU/Product",
+                },
+                {
+                  label: "Asset",
+                  href: "/databaseSKU/Asset",
+                },
+                {
+                  label: "Material",
+                  href: "/databaseSKU/Material",
+                },
+              ].map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="px-4 py-2 text-blue-600 border rounded-lg hover:bg-blue-700 hover:text-white"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
         </form>
 
-        {/* Categories Menu */}
-        <nav className="flex justify-center space-x-4 mb-6">
-          <Link
-            href="/databaseSKU/Product"
-            className="px-4 py-2 text-sm font-medium text-blue-700 border border-gray-300 rounded hover:bg-blue-700 hover:text-white transition duration-200"
-          >
-            Product
-          </Link>
-          <Link
-            href="/databaseSKU/Asset"
-            className="px-4 py-2 text-sm font-medium text-blue-700 border border-gray-300 rounded hover:bg-blue-700 hover:text-white transition duration-200"
-          >
-            Asset
-          </Link>
-          <Link
-            href="/databaseSKU/Material"
-            className="px-4 py-2 text-sm font-medium text-blue-700 border border-gray-300 rounded hover:bg-blue-700 hover:text-white transition duration-200"
-          >
-            Material
-          </Link>
-        </nav>
-
         {/* Table */}
-        <div className="flex-grow overflow-y-auto shadow rounded-lg">
-          <table className="min-w-full bg-white">
+        <div className="overflow-auto rounded-lg shadow mt-4">
+          <table className="w-full text-left border-collapse">
             {/* Table Head */}
             <thead>
-              <tr className="border-b border-gray-300">
-                <th className="px-4 py-3 text-left text-sm font-medium text-blue-500">
-                  No
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-blue-500">
-                  ID
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-blue-500">
-                  Product Description
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-blue-500">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-blue-500">
-                  Material Type
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-blue-500">
-                  UOM
-                </th>
+              <tr className="bg-blue-100 text-blue-700">
+                {[
+                  "No",
+                  "ID",
+                  "Description",
+                  "Type",
+                  "Material Type",
+                  "UoM",
+                ].map((heading) => (
+                  <th key={heading} className="px-4 py-3 border-b">
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
             {/* Table Body */}
-            <tbody>
+            <tbody className="bg-white divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">
+                  <td colSpan="7" className="text-center py-4">
                     Loading...
                   </td>
                 </tr>
               ) : Array.isArray(dbSku) && dbSku.length > 0 ? (
                 dbSku.map((item, index) => (
-                  <tr key={index} className="border-b border-gray-300">
-                    <td className="px-4 py-4 text-sm text-gray-500">
+                  <tr key={index} className="hover:bg-gray-100">
+                    <td className="px-4 py-3">
                       {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      #{item.id}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {item.description}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {item.type}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {item.material_type}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-500">
-                      {item.uom}
-                    </td>
+                    <td className="px-4 py-3">#{item.id}</td>
+                    <td className="px-4 py-3">{item.description}</td>
+                    <td className="px-4 py-3">{item.type}</td>
+                    <td className="px-4 py-3">{item.material_type}</td>
+                    <td className="px-4 py-3">{item.uom}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-4">
+                  <td colSpan="7" className="text-center py-4">
                     No data available
                   </td>
                 </tr>
@@ -178,17 +169,17 @@ function DatabaseSku() {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between mt-4">
+        <div className="flex justify-between items-center mt-4">
           <button
             onClick={() =>
               setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))
             }
             disabled={currentPage === 1}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="text-sm text-gray-700">
+          <span>
             Page {currentPage} of {totalPages}
           </span>
           <button
@@ -196,7 +187,7 @@ function DatabaseSku() {
               setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages))
             }
             disabled={currentPage === totalPages}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
           >
             Next
           </button>
