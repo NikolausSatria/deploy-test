@@ -65,6 +65,12 @@ export default async function handler(req, res) {
         WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty 
         ELSE idt.qty 
     END AS qty,
+    SUM(
+        CASE 
+            WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty 
+            ELSE idt.qty 
+        END
+    ) OVER (PARTITION BY combined.id) AS remaining_stock,
     idt.created_at,
     idt.deleted_at,
     ds.id AS sku_id,
