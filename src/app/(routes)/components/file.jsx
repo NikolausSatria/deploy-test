@@ -1,5 +1,3 @@
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import Image from "next/image";
 import HakedoLogoLetter from "../images/Hakedologo.png";
 import "../../styles/DeliveryNote.css";
@@ -7,56 +5,19 @@ import React, { useState, useEffect } from "react";
 import FormattedDate from "@/components/FormattedDate";
 import { useSession } from "next-auth/react";
 
-const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
+const MyComponent = ({ delivery_note_no }) => {
   const [deliveryData, setDeliveryData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { data: session } = useSession();
-
-  const printDocument = async () => {    
-    const input = document.getElementById("myElementId");    
-    if (!input) {  
-        alert("Element not found!");  
-        return;  
-    }  
-  
-    try {    
-        const canvas = await html2canvas(input, { scale: 3 }); // Tingkatkan skala untuk resolusi lebih tinggi    
-        const imgData = canvas.toDataURL("image/png");    
-        const pdf = new jsPDF("landscape", "mm", "a4"); // Orientasi landscape untuk PDF A4    
-        const imgWidth = 297; // Lebar A4 dalam mm    
-        const pageHeight = 210; // Tinggi A4 dalam mm    
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;    
-        let heightLeft = imgHeight;    
-        let position = 0;    
-  
-        // Tambahkan gambar ke halaman pertama    
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);    
-        heightLeft -= pageHeight;    
-  
-        // Tambahkan halaman baru jika diperlukan    
-        while (heightLeft > 0) {    
-            position = heightLeft - imgHeight;    
-            pdf.addPage();    
-            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);    
-            heightLeft -= pageHeight;    
-        }    
-  
-        // Simpan PDF    
-        pdf.save(`surat-jalan-${deliveryData[0].delivery_note_no}.pdf`);    
-    } catch (error) {    
-        console.error("Error generating PDF:", error);    
-        alert("Failed to generate PDF. Please try again.");    
-    }    
-};    
   
   useEffect(() => {
     async function fetchDeliveryData() {
       setLoading(true);
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_URL}/api/download_dn?delivery_note_no=${delivery_note_no}&so_no=${so_no}&date_at=${date_at}&customer_id=${customer_id}&in_out=OUT-EXT`
-        );
+          `${process.env.NEXT_PUBLIC_URL}/api/download_dn?delivery_note_no=${delivery_note_no}`
+        );        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -71,21 +32,11 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
       }
     }
     fetchDeliveryData();
-  }, [delivery_note_no, so_no, date_at, customer_id]);
+  }, [delivery_note_no]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-  return (  
-    <div>  
-      {/* <div className="flex justify-start px-4 pt-2">  
-        <button  
-          className="p-2 rounded text-blue border-2 border-blue-500 hover:bg-blue-500 hover:text-white duration-100"  
-          onClick={printDocument}  
-        >  
-          Download as PDF  
-        </button>  
-      </div>   */}
-  
+  return ( 
       <>  
         {deliveryData && deliveryData.length > 0 ? (  
           <div id="myElementId" className="delivery-notes-container"> 
@@ -185,7 +136,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                             <tr className="border-b border-black" key={index}>  
                               <td className="font-calibri px-2 pb-1 border-r border-black whitespace-nowrap font-[11px]">{index + 1}</td>  
                               <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 whitespace-nowrap">{item.product_id}</td>  
-                              <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 text-left whitespace-nowrap">{item.description}</td>  
+                              <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 text-left whitespace-nowrap">{item.product_name}</td>  
                               <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 whitespace-nowrap">{item.qty}</td>  
                               <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 whitespace-nowrap">{item.uom}</td>  
                             </tr>  
@@ -336,7 +287,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
                             <tr className="border-b border-black" key={index}>  
                               <td className="font-calibri px-2 pb-1 border-r border-black whitespace-nowrap font-[11px]">{index + 1}</td>  
                               <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 whitespace-nowrap">{item.product_id}</td>  
-                              <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 text-left whitespace-nowrap">{item.description}</td>  
+                              <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 text-left whitespace-nowrap">{item.product_name}</td>  
                               <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 whitespace-nowrap">{item.qty}</td>  
                               <td className="font-calibri font-[11px] border-r border-black px-2 pb-1 whitespace-nowrap">{item.uom}</td>  
                             </tr>  
@@ -396,8 +347,7 @@ const MyComponent = ({ delivery_note_no, so_no, date_at, customer_id }) => {
         ) : (  
           <p>Delivery data is loading or not available...</p>  
         )}  
-      </>  
-    </div>  
+      </>
   );  
 };  
 

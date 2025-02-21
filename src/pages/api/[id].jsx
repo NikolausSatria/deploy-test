@@ -53,107 +53,53 @@ export default async function handler(req, res) {
     try {
       const inventory = await query({
         query: `
-          SELECT idt.*,
-          ds.id AS id,
-          combined.id AS product_id,
-          combined.description,
-          combined.uom,
-          e.name AS employee_name
-          FROM inventories_db idt
-          INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
-          INNER JOIN employees e ON ds.employees_id = e.id
-          LEFT JOIN (
-              SELECT product_id AS id,
-              CONCAT(
-              product_description, '; ',
-              neck_type, '; ',
-              volume, ' ml; ',
-              material, '; ',
-              weight, ' gr; ',
-              color, '; ',
-              bottles_per_coli, '; ',
-              coli_per_box, '; ',
-              uom
-            ) AS description,
-
-              uom FROM product_db
-              UNION ALL
-              SELECT material_id AS id, material_description AS description, '' AS uom FROM material_db
-              UNION ALL
-              SELECT material_id AS id, material_description AS description, '' AS uom FROM asset_db
-          ) AS combined ON ds.product_id = combined.id
-          WHERE combined.id = ?
-            AND idt.deleted_at IS NULL
-          ORDER BY idt.created_at DESC;
+          SELECT 
+    idt.id,
+    idt.in_out,
+    idt.date_at,
+    idt.lot,
+    idt.dn,
+    idt.po,
+    idt.mo,
+    CASE 
+        WHEN idt.in_out LIKE 'OUT%' THEN -idt.qty 
+        ELSE idt.qty 
+    END AS qty,
+    idt.created_at,
+    idt.deleted_at,
+    ds.id AS sku_id,
+    combined.id AS product_id,
+    combined.description,
+    combined.uom,
+    e.name AS employee_name
+FROM inventories_db idt
+INNER JOIN database_sku ds ON idt.id = ds.inventory_db_id
+INNER JOIN employees e ON ds.employees_id = e.id
+LEFT JOIN (
+    SELECT 
+        product_id AS id,
+        CONCAT(
+            product_description, '; ',
+            neck_type, '; ',
+            volume, ' ml; ',
+            material, '; ',
+            weight, ' gr; ',
+            color, '; ',
+            bottles_per_coli, '; ',
+            coli_per_box, '; ',
+            uom
+        ) AS description,
+        uom 
+    FROM product_db
+    UNION ALL
+    SELECT material_id AS id, material_description AS description, '' AS uom FROM material_db
+    UNION ALL
+    SELECT material_id AS id, material_description AS description, '' AS uom FROM asset_db
+) AS combined ON ds.product_id = combined.id
+WHERE combined.id = ?
+AND idt.deleted_at IS NULL
+ORDER BY idt.created_at DESC;
         `,
-//         query: `  
-//           SELECT   
-//     idt.*,       
-//     ds.id AS id,  
-//     combined.id AS product_id,       
-//     combined.description,  
-//     combined.uom,    
-//     e.name AS employee_name,  
-//     (SELECT   
-//         SUM(qty)   
-//      FROM   
-//         inventories_db   
-//      WHERE   
-//         product_id = ds.product_id   
-//         AND in_out = 'IN-INT'   
-//         AND deleted_at IS NULL) AS total_in,  
-//     (SELECT   
-//         SUM(qty)   
-//      FROM   
-//         inventories_db   
-//      WHERE   
-//         product_id = ds.product_id   
-//         AND in_out = 'OUT-EXT'   
-//         AND deleted_at IS NULL) AS total_out  
-// FROM   
-//     inventories_db idt      
-// INNER JOIN   
-//     database_sku ds ON idt.id = ds.inventory_db_id   
-// INNER JOIN   
-//     employees e ON ds.employees_id = e.id      
-// LEFT JOIN (  
-//     SELECT   
-//         product_id AS id,   
-//         CONCAT(    
-//             product_description, '; ',    
-//             neck_type, '; ',    
-//             volume, ' ml; ',    
-//             material, '; ',    
-//             weight, ' gr; ',    
-//             color, '; ',    
-//             bottles_per_coli, '; ',    
-//             coli_per_box, '; ',    
-//             uom    
-//         ) AS description,   
-//         uom   
-//     FROM   
-//         product_db      
-//     UNION ALL      
-//     SELECT   
-//         material_id AS id,   
-//         material_description AS description,   
-//         '' AS uom   
-//     FROM   
-//         material_db      
-//     UNION ALL      
-//     SELECT   
-//         material_id AS id,   
-//         material_description AS description,   
-//         '' AS uom   
-//     FROM   
-//         asset_db      
-// ) AS combined ON ds.product_id = combined.id  
-// WHERE   
-//     combined.id = ?  
-//     AND idt.deleted_at IS NULL  
-// ORDER BY   
-//     idt.created_at DESC;  
-//         `,
         values: [id],
       });
 

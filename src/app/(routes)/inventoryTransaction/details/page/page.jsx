@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import FormattedDate from "@/components/FormattedDate";
@@ -18,71 +18,50 @@ const Details = () => {
   const [inventory, setInventory] = useState([]);
   const [title, setTitle] = useState("");
   const [productId, setProductId] = useState("");
-  const [totalStock, setTotalStock] = useState(0);
+  const [remainingStock, setremainingStock] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { data: session } = useSession();
 
+  const fetchInventory = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) throw new Error("Network response was not ok");
+
+      const response = await res.json();
+
+      if (response.inventory && response.inventory.length > 0) {
+        setInventory(response.inventory);
+        setTitle(response.inventory[0].description);
+        setProductId(response.inventory[0].product_id);
+
+        setremainingStock(response.inventory[0].remaining_stock || 0);
+      } else {
+        setInventory([]);
+        setTitle("Tidak ada data");
+        setProductId("");
+        setremainingStock(0);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Cek apakah session ada
     if (!session || !session.user) {
       router.push("/");
     }
   }, [session, router]);
 
   useEffect(() => {
-    const getInventory = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/${id}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        if (!res.ok) {
-          throw new Error("Network response was not ok");
-        }
-
-        const response = await res.json();
-
-        // Cek apakah inventory kosong
-        if (response.inventory && response.inventory.length > 0) {
-          setInventory(response.inventory);
-          setTitle(response.inventory[0].description);
-          setProductId(response.inventory[0].product_id);
-
-          // Calculate total stock
-          let totalIn = 0;
-          let totalOut = 0;
-
-          response.inventory.forEach((item) => {
-            if (item.in_out === "IN-INT") {
-              totalIn += item.qty;
-            } else if (item.in_out === "OUT-EXT") {
-              totalOut += item.qty;
-            }
-          });
-
-          setTotalStock(totalIn - totalOut);
-        } else {
-          // Jika tidak ada data, set inventory ke array kosong dan set title ke pesan
-          setInventory([]);
-          setTitle("Tidak ada data");
-          setProductId("");
-          setTotalStock(0);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getInventory();
+    fetchInventory();
   }, [id]);
-
-  const handleUpdate = (item) => {
-    router.push(`/editInventory?id=${item}`);
-  };
 
   const handleDelete = async (id, item) => {
     Swal.fire({
@@ -129,6 +108,53 @@ const Details = () => {
       }
     });
   };
+
+  const inventoryTable = useMemo(() => {
+    return inventory.map((item, index) => (
+      <tr key={index} className="border-b hover:bg-gray-50 text-center">
+        <td className="px-4 py-3 text-gray-600">{index + 1}</td>
+        <td className="px-4 py-3 text-gray-600">
+          <FormattedDate dateStr={item.date_at} dateFormat="dd-MM-yyyy" />
+        </td>
+        <td className="p-1 text-center">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+              item.in_out.includes("IN")
+                ? "bg-green-50 text-green-700 ring-green-600/20"
+                : "bg-red-50 text-red-700 ring-red-600/20"
+            }`}
+          >
+            {item.in_out}
+          </span>
+        </td>
+
+        <td className="px-4 py-3 text-gray-600">{item.description}</td>
+        <td className="px-4 py-3 font-semibold text-gray-700">{item.qty}</td>
+        <td className="px-4 py-3 text-gray-600">
+          <FormattedDate dateStr={item.created_at} dateFormat="PPpp" />
+        </td>
+        <td className="px-4 py-3 text-gray-600">{item.employee_name}</td>
+        <td className="px-4 py-3">
+          <div className="flex items-center space-x-2">
+            <button
+              className="p-2 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition transform hover:scale-105"
+              onClick={() => handleUpdate(item.id)}
+            >
+              <FaRegEdit size={"20px"} />
+            </button>
+            {session.user.position !== "user" && (
+              <button
+                className="p-2 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition transform hover:scale-105"
+                onClick={() => handleDelete(item.id, item.product_id)}
+              >
+                <MdDeleteForever size={"20px"} />
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    ));
+  }, [inventory, session]); // 🔥 Cache data biar gak re-render terus
 
   if (loading) {
     return (
@@ -179,7 +205,7 @@ const Details = () => {
           {/* Total Qty */}
           <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow">
             <span className="text-sm">Total Qty</span>
-            <h2 className="text-lg font-semibold">{totalStock}</h2>
+            <h2 className="text-lg font-semibold">{remainingStock}</h2>
           </div>
         </div>
 
@@ -198,7 +224,7 @@ const Details = () => {
                   "Employee",
                   "Action",
                 ].map((heading, index) => (
-                  <th key={index} className="px-4 py-3 border-b text-left">
+                  <th key={index} className="px-4 py-3 border-b text-center">
                     {heading}
                   </th>
                 ))}
@@ -215,57 +241,7 @@ const Details = () => {
                   </td>
                 </tr>
               ) : (
-                inventory.map((item, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <FormattedDate
-                        dateStr={item.date_at}
-                        dateFormat="dd-MM-yyyy"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{item.in_out}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {item.description}
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-gray-700">
-                      {item.qty}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <FormattedDate
-                        dateStr={item.created_at}
-                        dateFormat="PPpp"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {item.employee_name}
-                    </td>
-                    {/* Action Buttons */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-2">
-                        {/* Edit Button */}
-                        <button
-                          className="p-2 rounded border text-blue-500 hover:text-white hover:bg-blue-500 transition transform hover:scale-105"
-                          onClick={() => handleUpdate(item.id)}
-                        >
-                          <FaRegEdit size={"20px"} />
-                        </button>
-
-                        {/* Delete Button (Hanya muncul jika bukan 'user') */}
-                        {session.user.position !== "user" && (
-                          <button
-                            className="p-2 text-rose-600 hover:text-white hover:bg-rose-600 rounded border transition transform hover:scale-105"
-                            onClick={() =>
-                              handleDelete(item.id, item.product_id)
-                            }
-                          >
-                            <MdDeleteForever size={"20px"} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                inventoryTable
               )}
             </tbody>
           </table>

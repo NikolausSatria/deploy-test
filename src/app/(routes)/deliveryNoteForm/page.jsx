@@ -12,11 +12,12 @@ function deliveryNoteForm() {
   const router = useRouter();
   const { data: session } = useSession();
   const employee_id = session?.user?.id;
+  const [uomOptions, setUomOptions] = useState([]);
 
   const [loading, setLoading] = useState(false);
 
   const [state, setState] = useState({
-    formList: [{ product_id: 0, qty: "" }],
+    formList: [{ product_id: 0, qty: "", uom_id: null }],
     date_at: "",
     po: "",
     dn: "",
@@ -27,7 +28,6 @@ function deliveryNoteForm() {
     delivery_note: "",
     company_name: "",
     address: "",
-    uom: "",
     employee_id: "",
     pic: "",
   });
@@ -43,6 +43,29 @@ function deliveryNoteForm() {
 
   // search inventory
   const animatedComponent = makeAnimated();
+
+  const loadUOMOptions = async (inputValue) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_URL}/api/uom?search=${encodeURIComponent(
+          inputValue
+        )}`
+      );
+      const data = await response.json();
+
+      const filteredData = data.filter((uom) =>
+        uom.name.toLowerCase().includes(inputValue.toLowerCase())
+      );
+
+      return filteredData.map((uom) => ({
+        value: uom.id,
+        label: uom.name,
+      }));
+    } catch (error) {
+      console.error("Error fetching UOMs:", error);
+      return [];
+    }
+  };
 
   const loadOption = async (inputValue) => {
     try {
@@ -98,7 +121,20 @@ function deliveryNoteForm() {
     const updatedFormList = state.formList.map((item, i) =>
       i === index ? { ...item, qty: e.target.value } : item
     );
-    setState({ ...state, formList: updatedFormList });
+    setState((prevState) => ({
+      ...prevState,
+      formList: updatedFormList,
+    }));
+  };
+
+  const handleUOMChange = (selectedOption, index) => {
+    const updatedFormList = state.formList.map((item, i) =>
+      i === index ? { ...item, uom_id: selectedOption.value } : item
+    );
+    setState((prevState) => ({
+      ...prevState,
+      formList: updatedFormList,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -147,7 +183,6 @@ function deliveryNoteForm() {
               const _customer_id = encodeURIComponent(state.customer_id);
               const downloadUrl = `/download?delivery_note_no=${_dn_no}&so_no=${_so_no}&date_at=${_date_at}&customer_id=${_customer_id}`;
               window.open(downloadUrl, "_blank");
-              
             } else {
               router.push(`/inventoryTransaction`);
             }
@@ -272,14 +307,17 @@ function deliveryNoteForm() {
                 >
                   UoM
                 </label>
-                <input
-                  type="text"
-                  id="customerID"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="Enter UoM"
-                  required
-                  value={state.uom}
-                  onChange={(e) => setState({ ...state, uom: e.target.value })}
+                <AsyncSelect
+                  cacheOptions
+                  defaultOptions
+                  loadOptions={loadUOMOptions}
+                  value={uomOptions.find(
+                    (opt) => opt.value === state.formList[index].uom_id
+                  )}
+                  onChange={(selectedOption) =>
+                    handleUOMChange(selectedOption, index)
+                  }
+                  placeholder="Select UoM"
                 />
               </div>
             </div>
