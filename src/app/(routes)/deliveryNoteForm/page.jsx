@@ -176,13 +176,24 @@ function deliveryNoteForm() {
             confirmButtonText: "Download File",
             confirmButtonColor: "#3085d6",
           }).then((result) => {
+            // if (result.isConfirmed) {
+            //   const _dn_no = encodeURIComponent(state.dn);
+            //   const _so_no = encodeURIComponent(state.so);
+            //   const _date_at = encodeURIComponent(state.date_at);
+            //   const _customer_id = encodeURIComponent(state.customer_id);
+            //   const downloadUrl = `/download?delivery_note_no=${_dn_no}&so_no=${_so_no}&date_at=${_date_at}&customer_id=${_customer_id}`;
+            //   window.open(downloadUrl, "_blank");
             if (result.isConfirmed) {
-              const _dn_no = encodeURIComponent(state.dn);
-              const _so_no = encodeURIComponent(state.so);
-              const _date_at = encodeURIComponent(state.date_at);
-              const _customer_id = encodeURIComponent(state.customer_id);
-              const downloadUrl = `/download?delivery_note_no=${_dn_no}&so_no=${_so_no}&date_at=${_date_at}&customer_id=${_customer_id}`;
+              const params = new URLSearchParams({
+                delivery_note_no: state.dn,
+                so_no: state.so,
+                date_at: state.date_at,
+                customer_id: state.customer_id,
+              }).toString();
+
+              const downloadUrl = `/download?${params}`;
               window.open(downloadUrl, "_blank");
+              router.push(`/inventoryTransaction`);
             } else {
               router.push(`/inventoryTransaction`);
             }
